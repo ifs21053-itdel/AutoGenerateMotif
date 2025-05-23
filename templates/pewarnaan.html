@@ -1,0 +1,131 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aplikasi Pewarnaan Motif Ulos</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <link rel="stylesheet" href="{% static 'pewarnaan.css' %}">
+</head>
+<body>
+    {% include 'header.html' %}
+
+    <!-- Main Content -->
+    <div class="content-wrapper">
+        <div class="blue-background-container">
+            <div class="blue-background">
+                <h1 class="app-title">Aplikasi Pewarnaan Motif Ulos</h1>
+                
+                <div class="card">
+                    <div class="card-body p-4 p-md-5">
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            
+                            <!-- Dropdown Jenis Ulos -->
+                            <div class="form-group text-center mb-4">
+                                <label for="jenisUlos" class="form-label">Jenis Ulos</label>
+                                <select class="form-control" id="jenisUlos" name="jenisUlos">
+                                    <option selected>Jenis Ulos</option>
+                                    <option value="harungguan">Harungguan</option>
+                                    <option value="puca">Puca</option>
+                                    <option value="sadum">Sadum</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Selected Colors Display -->
+                            <div class="form-group text-center mb-4">
+                                <label class="form-label">Warna Dipilih</label>
+                                <div class="selected-colors-container" id="selectedColorsContainer">
+                                    <!-- Warna yang dipilih akan ditampilkan di sini -->
+                                </div>
+                                <span class="color-counter" id="colorCounter">0/10 warna dipilih</span>
+                            </div>
+                            
+                            <!-- Color Picker Section -->
+                            <div class="form-group text-center">
+                                <label class="form-label">Pilih Warna</label>
+                                <div class="color-container">
+                                    <div class="color-grid">
+                                        <!-- Baris 1: C001-C010 -->
+<button type="button" class="color-btn" style="background-color: #D9EB73;" data-color="#D9EB73" title="C001"></button>
+<button type="button" class="color-btn" style="background-color: #6B0A0D;" data-color="#6B0A0D" title="C002"></button>
+<button type="button" class="color-btn" style="background-color: #70351C;" data-color="#70351C" title="C003"></button>
+<button type="button" class="color-btn" style="background-color: #BA304C;" data-color="#BA304C" title="C004"></button>
+<button type="button" class="color-btn" style="background-color: #C44949;" data-color="#C44949" title="C005"></button>
+<button type="button" class="color-btn" style="background-color: #DB3232;" data-color="#DB3232" title="C006"></button>
+<button type="button" class="color-btn" style="background-color: #AB2C13;" data-color="#AB2C13" title="C007"></button>
+<button type="button" class="color-btn" style="background-color: #B00B4F;" data-color="#B00B4F" title="C008"></button>
+<button type="button" class="color-btn" style="background-color: #6C439C;" data-color="#6C439C" title="C009"></button>
+<button type="button" class="color-btn" style="background-color: #B05D5D;" data-color="#B05D5D" title="C010"></button>
+
+<!-- Baris 2: C011-C020 -->
+<button type="button" class="color-btn" style="background-color: #EB0775;" data-color="#EB0775" title="C011"></button>
+<button type="button" class="color-btn" style="background-color: #BF132D;" data-color="#BF132D" title="C012"></button>
+<button type="button" class="color-btn" style="background-color: #004F10;" data-color="#004F10" title="C013"></button>
+<button type="button" class="color-btn" style="background-color: #4E8746;" data-color="#4E8746" title="C014"></button>
+<button type="button" class="color-btn" style="background-color: #009933;" data-color="#009933" title="C015"></button>
+<button type="button" class="color-btn" style="background-color: #FFFFFF;" data-color="#FFFFFF" title="C016"></button>
+<button type="button" class="color-btn" style="background-color: #D1EB3F;" data-color="#D1EB3F" title="C017"></button>
+<button type="button" class="color-btn" style="background-color: #00ED47;" data-color="#00ED47" title="C018"></button>
+<button type="button" class="color-btn" style="background-color: #914321;" data-color="#914321" title="C019"></button>
+<button type="button" class="color-btn" style="background-color: #E39024;" data-color="#E39024" title="C020"></button>
+
+<!-- Baris 3: C021-C030 -->
+<button type="button" class="color-btn" style="background-color: #FCF400;" data-color="#FCF400" title="C021"></button>
+<button type="button" class="color-btn" style="background-color: #B08400;" data-color="#B08400" title="C022"></button>
+<button type="button" class="color-btn" style="background-color: #FFF4BD;" data-color="#FFF4BD" title="C023"></button>
+<button type="button" class="color-btn" style="background-color: #393F52;" data-color="#393F52" title="C024"></button>
+<button type="button" class="color-btn" style="background-color: #392C8A;" data-color="#392C8A" title="C025"></button>
+<button type="button" class="color-btn" style="background-color: #4661B3;" data-color="#4661B3" title="C026"></button>
+<button type="button" class="color-btn" style="background-color: #66BFFF;" data-color="#66BFFF" title="C027"></button>
+<button type="button" class="color-btn" style="background-color: #A6E1FF;" data-color="#A6E1FF" title="C028"></button>
+<button type="button" class="color-btn" style="background-color: #2E7365;" data-color="#2E7365" title="C029"></button>
+<button type="button" class="color-btn" style="background-color: #FFD900;" data-color="#FFD900" title="C030"></button>
+
+<!-- Baris 4: C031-C032 dan warna tambahan -->
+<button type="button" class="color-btn" style="background-color: #FFE6CC;" data-color="#FFE6CC" title="C031"></button>
+<button type="button" class="color-btn" style="background-color: #000000;" data-color="#000000" title="C032"></button>
+<button type="button" class="color-btn" style="background-color: #808080;" data-color="#808080" title="Gray"></button>
+<button type="button" class="color-btn" style="background-color: #A0A0A0;" data-color="#A0A0A0" title="Light Gray"></button>
+<button type="button" class="color-btn" style="background-color: #606060;" data-color="#606060" title="Dark Gray"></button>
+<button type="button" class="color-btn" style="background-color: #DDDDDD;" data-color="#DDDDDD" title="Very Light Gray"></button>
+<button type="button" class="color-btn" style="background-color: #404040;" data-color="#404040" title="Charcoal"></button>
+<button type="button" class="color-btn" style="background-color: #F0F0F0;" data-color="#F0F0F0" title="Near White"></button>
+<button type="button" class="color-btn" style="background-color: #202020;" data-color="#202020" title="Very Dark Gray"></button>
+<button type="button" class="color-btn" style="background-color: #F8F8F8;" data-color="#F8F8F8" title="Off White"></button>
+
+<!-- Baris 5: Warna netral -->
+<button type="button" class="color-btn" style="background-color: #000000;" data-color="#000000" title="Black"></button>
+<button type="button" class="color-btn" style="background-color: #333333;" data-color="#333333" title="Dark Gray"></button>
+<button type="button" class="color-btn" style="background-color: #666666;" data-color="#666666" title="Medium Gray"></button>
+<button type="button" class="color-btn" style="background-color: #999999;" data-color="#999999" title="Light Gray"></button>
+<button type="button" class="color-btn" style="background-color: #CCCCCC;" data-color="#CCCCCC" title="Very Light Gray"></button>
+                                    </div>
+                                </div>
+                                <input type="hidden" id="selectedColors" name="selectedColors" value="">
+                            </div>
+                            
+                            <!-- Submit Button -->
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-primary">Warnai Motif</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <!-- jQuery and Bootstrap JS -->
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{% static 'pewarnaan.js' %}"></script>
+</body>
+</html>
