@@ -15,6 +15,33 @@ class MotifForm1(models.Model):
     user = models.TextField()
     time = models.DateTimeField(auto_now_add= True)
 
+class UlosColorThread(models.Model):
+    CODE = models.CharField(max_length=10, primary_key=True)
+    hsv = models.CharField(max_length=50)
+
+    def __str__(self):
+        return self.CODE
+
+    class Meta:
+        verbose_name = "Ulos Color Thread"
+        verbose_name_plural = "Ulos Color Threads"
+        db_table = 'ulos_color_thread'
+
+class UlosCharacteristic(models.Model):
+    NAME = models.CharField(max_length=50, primary_key=True)
+    garis = models.TextField()
+    pola = models.TextField()
+    warna_dominasi = models.TextField()
+    warna_aksen = models.TextField()
+    kontras_warna = models.TextField()
+
+    def __str__(self):
+        return self.NAME
+
+    class Meta:
+        verbose_name = "Ulos Characteristic"
+        verbose_name_plural = "Ulos Characteristics"
+        db_table = 'ulos_characteristic'
     
 
 class Post(models.Model):

@@ -17,7 +17,13 @@ from .MotifModule import Motif
 from .zipModule import ZIP
 from .deleteModule import Delete
 import sys, os, re
-
+from django.shortcuts import render
+from .models import UlosCharacteristic, UlosColorThread
+import colorsys
+from .Coloring import main_coloring_process
+from django.http import JsonResponse
+import json 
+from django.conf import settings
 from django.utils.datastructures import MultiValueDictKeyError
 
 
@@ -501,131 +507,70 @@ def help_download(request):
     return render(request, "help-download.html", {'navlink1':navlink[0],'navlink2':navlink[1],'navlink3':navlink[2],'navlink4':navlink[3]})
 
 @login_required(login_url='login')
-def pewarnaan(request):
-    user = request.user
-    status = user.is_staff
-    
-    if status == 0:
-        status = None
-    
-    if request.method == 'POST':
-        jenis_ulos = request.POST.get('jenisUlos')
-        selected_colors = request.POST.get('selectedColors')
+def coloring_view(request):
+    ulos_types = UlosCharacteristic.objects.all()
+    ulos_colors_from_db = UlosColorThread.objects.all()
+
+    colors_for_template = []
+    for color_thread in ulos_colors_from_db:
+        h_str, s_str, v_str = color_thread.hsv.split(',')
+        h, s, v = float(h_str), float(s_str) / 100, float(v_str) / 100
+        r, g, b = colorsys.hsv_to_rgb(h / 360, s, v)
+        hex_color = '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
+        colors_for_template.append({
+            'code': color_thread.CODE,
+            'hex_color': hex_color,
+            'hsv': color_thread.hsv
+        })
+
+    if request.method == 'GET':
+        context = {
+            'ulos_types': ulos_types,
+            'ulos_colors': colors_for_template,
+            'colored_image_url': None,
+            'selected_ulos_type': '',
+            'selected_colors_codes': [],
+        }
+        return render(request, '../templates/pewarnaan.html', context)
+
+    elif request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        selected_ulos_type = request.POST.get('jenisUlos')
+        selected_color_codes_str = request.POST.get('selectedColors')
+        selected_colors_codes = selected_color_codes_str.split(',') if selected_color_codes_str else []
         
-        # Validate input
-        if jenis_ulos == 'Jenis Ulos' or not selected_colors:
-            messages.error(request, "Silakan pilih jenis ulos dan minimal satu warna.")
-        else:
-            try:
-                # Parse selected colors JSON
-                import json
-                colors_list = json.loads(selected_colors)
-                
-                if not colors_list:
-                    messages.error(request, "Silakan pilih minimal satu warna.")
-                else:
-                    # Fetch the base motif pattern based on jenis_ulos
-                    if jenis_ulos == "harungguan":
-                        base_motif = MotifForm1.objects.filter(jenisGenerate__icontains="Harungguan").first()
-                    elif jenis_ulos == "puca":
-                        base_motif = MotifForm1.objects.filter(jenisGenerate__icontains="Puca").first()
-                    elif jenis_ulos == "sadum":
-                        base_motif = MotifForm1.objects.filter(jenisGenerate__icontains="Sadum").first()
-                    else:
-                        base_motif = None
-                    
-                    if base_motif:
-                        # Import required libraries
-                        from PIL import Image
-                        import colorsys
-                        
-                        # Process each selected color
-                        created_motifs = []
-                        for color in colors_list:
-                            try:
-                                # Process the image coloring
-                                img_path = base_motif.imgAfter
-                                
-                                # Create a new filename for the colored motif
-                                original_filename = os.path.basename(img_path)
-                                color_code = color.replace('#', '')
-                                colored_filename = f"colored_{color_code}_{user.username}_{original_filename}"
-                                
-                                # Get the path to save the new colored image
-                                fs = FileSystemStorage()
-                                save_path = os.path.join(fs.location, colored_filename)
-                                
-                                # Open the original image
-                                img = Image.open(img_path.path if hasattr(img_path, 'path') else img_path)
-                                
-                                # Create a new image for the result
-                                colored_img = img.copy().convert('RGBA')
-                                
-                                # Get the image data
-                                pixels = colored_img.load()
-                                
-                                # Convert hex color to RGB
-                                r = int(color[1:3], 16)
-                                g = int(color[3:5], 16)
-                                b = int(color[5:7], 16)
-                                
-                                # Convert RGB to HSV
-                                h, s, v = colorsys.rgb_to_hsv(r/255, g/255, b/255)
-                                
-                                # Process each pixel
-                                for i in range(colored_img.width):
-                                    for j in range(colored_img.height):
-                                        r_orig, g_orig, b_orig, a = pixels[i, j]
-                                        
-                                        # Only process non-white and non-transparent pixels
-                                        if a > 0 and (r_orig < 250 or g_orig < 250 or b_orig < 250):
-                                            # Convert to HSV for easier manipulation
-                                            h_pixel, s_pixel, v_pixel = colorsys.rgb_to_hsv(r_orig/255, g_orig/255, b_orig/255)
-                                            
-                                            # Keep the value (brightness) of the original pixel
-                                            # but use the hue and saturation from the selected color
-                                            new_r, new_g, new_b = colorsys.hsv_to_rgb(h, s, v_pixel)
-                                            
-                                            # Apply the new color
-                                            pixels[i, j] = (int(new_r*255), int(new_g*255), int(new_b*255), a)
-                                
-                                # Save the colored image
-                                colored_img.save(save_path)
-                                
-                                # Create a new MotifForm1 entry for the colored motif
-                                colored_motif = MotifForm1()
-                                colored_motif.imgBefore = base_motif.imgBefore
-                                colored_motif.imgAfter = colored_filename
-                                colored_motif.urutanLidi = base_motif.urutanLidi
-                                colored_motif.jenisGenerate = f"{jenis_ulos} (Warna: {color})"
-                                colored_motif.jmlBaris = base_motif.jmlBaris
-                                colored_motif.user = user.username
-                                colored_motif.save()
-                                
-                                created_motifs.append(color)
-                            except Exception as e:
-                                messages.error(request, f"Terjadi kesalahan saat memproses warna {color}: {str(e)}")
-                        
-                        if created_motifs:
-                            if len(created_motifs) == 1:
-                                messages.success(request, f"Pewarnaan motif {jenis_ulos} dengan warna {created_motifs[0]} berhasil diterapkan! Lihat hasil di halaman Motif.")
-                            else:
-                                messages.success(request, f"Pewarnaan motif {jenis_ulos} dengan {len(created_motifs)} warna berhasil diterapkan! Lihat hasil di halaman Motif.")
-                    else:
-                        messages.error(request, f"Tidak ditemukan motif dasar untuk jenis ulos {jenis_ulos}.")
-            except Exception as e:
-                messages.error(request, f"Terjadi kesalahan: {str(e)}")
+        selected_colors_codes = [code for code in selected_colors_codes if code]
+
+        base_image_filename = f"{selected_ulos_type.lower()}_grayscale.png"
+        
+        base_image_path = os.path.join(
+            settings.BASE_DIR,
+            'static',
+            'ColoringFile',
+            base_image_filename
+        )
+
+        if not os.path.exists(base_image_path):
+            return JsonResponse({'error': f'Base image not found for {selected_ulos_type} at {base_image_path}.'}, status=400)
+            
+        if not selected_ulos_type or len(selected_colors_codes) < 2:
+            return JsonResponse({'error': 'Please select Ulos type and at least 2 colors.'}, status=400)
+
+        try:
+            colored_image_url = main_coloring_process(
+                selected_ulos_type,
+                selected_colors_codes,
+                base_image_path
+            )
+
+            if colored_image_url:
+                return JsonResponse({'colored_image_url': colored_image_url})
+            else:
+                return JsonResponse({'error': 'Failed to generate colored image.'}, status=500)
+        except Exception as e:
+            print(f"Error during coloring process: {e}")
+            return JsonResponse({'error': f'An internal error occurred: {str(e)}'}, status=500)
     
-    # Update navlink array untuk 5 menu (termasuk Pewarnaan)
-    navlink = ['nav-link nav-link-1', 'nav-link nav-link-2', 'nav-link nav-link-3', 'nav-link nav-link-4 active', 'nav-link nav-link-5']
-    return render(request, 'pewarnaan.html', {
-        "status": status, 
-        'navlink1': navlink[0], 
-        'navlink2': navlink[1], 
-        'navlink3': navlink[2], 
-        'navlink4': navlink[3],
-        'navlink5': navlink[4]
-    })
+    return JsonResponse({'error': 'Invalid request'}, status=400)
 
 def SignupPage(request):
     if request.user.is_authenticated:

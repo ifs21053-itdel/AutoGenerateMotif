@@ -47,7 +47,7 @@ urlpatterns = [
     path('', views.LoginPage, name='login'),
     path('logout/', views.LogoutPage, name='logout'),
     path('register/', views.SignupPage, name='signup'),
-    path('pewarnaan/', views.pewarnaan, name='pewarnaan')
+    path('pewarnaan/', views.coloring_view, name='pewarnaan'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

@@ -1,10 +1,14 @@
-/* static/pewarnaan.css */
+/* static/css/pewarnaan.css */
 
 body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
     background-color: #f5f5f5;
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    justify-content: center; /* Center content vertically */
+    align-items: center; /* Center content horizontally */
 }
 
 .content-wrapper {
@@ -14,11 +18,12 @@ body {
     align-items: center;
     padding: 30px 0;
     position: relative;
+    width: 100%; /* Ensure it takes full width to center its child */
 }
 
 .blue-background-container {
-    max-width: 1200px; /* Diperbesar dari 1000px */
-    width: 95%; /* Diperbesar dari 100% */
+    max-width: 1200px;
+    width: 95%;
     margin: 0 auto;
     position: relative;
 }
@@ -26,11 +31,15 @@ body {
 .blue-background {
     position: relative;
     background-color: #002BA3;
-    padding: 50px 30px; /* Diperbesar dari 40px 20px */
-    min-height: 650px; /* Diperbesar dari 600px */
+    padding: 50px 30px;
+    min-height: 650px;
     width: 100%;
     border-radius: 15px;
     overflow: hidden;
+    display: flex; /* Use flexbox for internal alignment */
+    flex-direction: column;
+    align-items: center; /* Center items horizontally within the blue background */
+    justify-content: center; /* Center items vertically within the blue background */
 }
 
 .blue-background::after {
@@ -38,8 +47,8 @@ body {
     position: absolute;
     bottom: 0;
     right: 0;
-    width: 20%; /* Diperkecil dari 25% */
-    height: 25%; /* Diperkecil dari 30% */
+    width: 20%;
+    height: 25%;
     background-color: white;
     clip-path: polygon(100% 0, 0% 100%, 100% 100%);
 }
@@ -47,20 +56,26 @@ body {
 .card {
     border-radius: 15px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-    max-width: 900px; /* Diperbesar dari 800px */
-    width: 95%; /* Diperbesar dari 90% */
+    max-width: 900px;
+    width: 95%;
     margin: 0 auto;
     background-color: #fff;
     z-index: 10;
     position: relative;
+    padding: 20px; /* Add internal padding to the card */
 }
+
+.card-body {
+    padding: 1.5rem !important; /* Override default p-4 from Bootstrap if present */
+}
+
 
 .color-container {
     border: 1px solid #ddd;
     border-radius: 8px;
-    padding: 20px; /* Diperbesar dari 15px */
+    padding: 20px;
     background-color: #fff;
-    max-width: 650px; /* Diperbesar dari 550px */
+    max-width: 650px;
     margin: 0 auto;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
 }
@@ -68,24 +83,27 @@ body {
 .color-grid {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
-    gap: 8px; /* Diperbesar dari 5px */
+    gap: 8px;
+    justify-items: center; /* Center items within grid cells */
+    align-items: center; /* Center items within grid cells */
 }
 
-.color-btn {
-    width: 40px; /* Diperbesar dari 35px */
-    height: 40px; /* Diperbesar dari 35px */
+.color-item { /* Renamed from .color-btn to match HTML */
+    width: 40px;
+    height: 40px;
     border-radius: 4px;
     border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
+    box-sizing: border-box; /* Include padding and border in the element's total width and height */
 }
 
-.color-btn:hover {
+.color-item:hover {
     transform: scale(1.1);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.color-btn.selected {
+.color-item.selected {
     border: 3px solid #000;
     transform: scale(1.05);
 }
@@ -94,10 +112,15 @@ body {
     background-color: #002BA3;
     border: none;
     border-radius: 4px;
-    padding: 15px 50px; /* Diperbesar dari 12px 40px */
-    font-size: 1.2rem; /* Diperbesar dari 1.1rem */
+    padding: 15px 50px;
+    font-size: 1.2rem;
     font-weight: 500;
-    min-width: 250px; /* Diperbesar dari 200px */
+    min-width: 250px;
+    color: white; /* Ensure text is white */
+    cursor: pointer;
+    display: inline-flex; /* For spinner alignment */
+    align-items: center;
+    justify-content: center;
 }
 
 .btn-primary:hover {
@@ -108,46 +131,302 @@ body {
 
 .app-title {
     color: white;
-    font-size: 2rem; /* Diperbesar dari 1.75rem */
-    margin-bottom: 40px; /* Diperbesar dari 30px */
+    font-size: 2rem;
+    margin-bottom: 40px;
     text-align: center;
     font-weight: 500;
 }
 
 .form-control {
-    max-width: 300px; /* Diperbesar dari 250px */
+    max-width: 300px;
     margin: 0 auto;
-    height: 45px; /* Diperbesar dari 40px */
+    height: 45px;
     border-radius: 4px;
     border: 1px solid #ced4da;
     font-size: 1rem;
+    padding: 0.375rem 0.75rem; /* Standard Bootstrap padding */
 }
 
 .form-control:focus {
     border-color: #002BA3;
     box-shadow: 0 0 0 0.2rem rgba(0, 43, 163, 0.25);
+    outline: none;
 }
 
 .form-label {
-    font-size: 1.2rem; /* Diperbesar dari 1.1rem */
-    margin-bottom: 20px; /* Diperbesar dari 15px */
+    font-size: 1.2rem;
+    margin-bottom: 20px;
     display: block;
     text-align: center;
     font-weight: 500;
     color: #333;
 }
 
+.image-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+#coloredImage {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 10px;
+}
+
+#downloadImageBtn {
+    display: block;
+    padding: 18px 60px;
+    font-size: 1.3rem; /* Contoh: 1.3rem (sesuaikan sesuai keinginan) */
+    width: 100%;
+    max-width: 300px; /* Tingkatkan max-width agar tombol bisa lebih lebar */
+    margin-top: 20px; /* Tambahkan jarak di atas tombol jika perlu */
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 8px; /* Contoh: 8px */
+}
+
+.image-section .app-title {
+    color: white;
+}
+.image-section p#noImageMessage {
+    color: white;
+}
+
 .selected-colors-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px; /* Diperbesar dari 10px */
+    gap: 12px;
     justify-content: center;
-    margin: 25px auto; /* Diperbesar dari 20px */
-    max-width: 650px; /* Diperbesar dari 550px */
-    min-height: 60px; /* Diperbesar dari 50px */
+    margin: 25px auto;
+    max-width: 650px;
+    min-height: 60px;
     border: 1px dashed #ddd;
     border-radius: 8px;
-    padding: 15px; /* Diperbesar dari 10px */
+    padding: 15px;
+    background-color: #fafafa;
+}
+
+.selected-color-box {
+    width: 45px;
+    height: 45px;
+    border-radius: 4px;
+    position: relative;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid #ccc;
+}
+
+.selected-color-box .remove-color-btn { /* Renamed for clarity */
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    background: white;
+    color: red;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    border: 1px solid #ddd;
+    font-weight: bold;
+    line-height: 1; /* Adjust line-height for better centering of 'x' */
+}
+
+.selected-color-box .remove-color-btn:hover {
+    background-color: #ff4444;
+    color: white;
+    transform: scale(1.1);
+}
+
+.color-counter {
+    display: inline-block;
+    text-align: center;
+    margin-top: 15px;
+    font-size: 1rem;
+    color: #555;
+    font-weight: 500;
+    padding: 8px 15px;
+    background-color: #e9ecef;
+    border-radius: 20px;
+}
+
+/* Result Image Styling */
+.result-image {
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Loading Spinner */
+#loadingSpinner {
+    display: none; /* Sembunyikan secara default */
+    border: 4px solid rgba(255, 255, 255, 0.3); /* Lighter border for contrast on blue button */
+    border-left-color: #ffffff; /* White color for the spinning part */
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+    margin-left: 10px;
+    vertical-align: middle;
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Error Message */
+.error-message { /* Changed from #errorMessage to .error-message */
+    color: #dc3545; /* Bootstrap red for error */
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+/* Responsive Design */
+@media (max-width: 992px) {
+    .blue-background {
+        min-height: 600px;
+    }
+    .card {
+        max-width: 800px;
+    }
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        padding: 20px 0;
+    }
+
+    .blue-background-container {
+        width: 98%;
+        max-width: none;
+    }
+
+    .blue-background {
+        padding: 30px 20px;
+        min-height: 550px;
+    }
+
+    .card {
+        width: 98%;
+        max-width: none;
+    }
+
+    .color-grid {
+        grid-template-columns: repeat(8, 1fr);
+        gap: 6px;
+    }
+
+    .color-item {
+        width: 35px;
+        height: 35px;
+    }
+
+    .app-title {
+        font-size: 1.6rem;
+        margin-bottom: 25px;
+    }
+
+    .color-container {
+        max-width: 450px;
+        padding: 15px;
+    }
+
+    .form-control {
+        max-width: 250px;
+        height: 40px;
+    }
+
+    .btn-primary {
+        padding: 12px 35px;
+        font-size: 1.1rem;
+        min-width: 200px;
+    }
+}
+
+@media (max-width: 576px) {
+    .blue-background {
+        padding: 25px 15px;
+        min-height: 500px;
+    }
+
+    .color-grid {
+        grid-template-columns: repeat(6, 1fr);
+        gap: 4px;
+    }
+
+    .color-item {
+        width: 32px;
+        height: 32px;
+    }
+
+    .selected-color-box {
+        width: 40px;
+        height: 40px;
+    }
+
+    .app-title {
+        font-size: 1.4rem;
+        margin-bottom: 20px;
+    }
+
+    .form-control {
+        max-width: 220px;
+        height: 38px;
+    }
+
+    .color-container {
+        max-width: 350px;
+        padding: 12px;
+    }
+
+    .btn-primary {
+        min-width: 180px;
+        padding: 10px 30px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 400px) {
+    .color-grid {
+        grid-template-columns: repeat(5, 1fr);
+        gap: 3px;
+    }
+
+    .color-item {
+        width: 28px;
+        height: 28px;
+    }
+
+    .blue-background-container {
+        width: 100%;
+    }
+
+    .color-container {
+        max-width: 300px;
+        padding: 10px;
+    }
+}
+
+.selected-colors-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px; 
+    justify-content: center;
+    margin: 25px auto; 
+    max-width: 650px; 
+    min-height: 60px; 
+    border: 1px dashed #ddd;
+    border-radius: 8px;
+    padding: 15px; 
     background-color: #fafafa;
 }
 
@@ -183,133 +462,4 @@ body {
     background-color: #ff4444;
     color: white;
     transform: scale(1.1);
-}
-
-.color-counter {
-    display: inline-block;
-    text-align: center;
-    margin-top: 15px; /* Diperbesar dari 10px */
-    font-size: 1rem; /* Diperbesar dari 0.9rem */
-    color: #555;
-    font-weight: 500;
-    padding: 8px 15px; /* Diperbesar dari 5px 10px */
-    background-color: #e9ecef;
-    border-radius: 20px; /* Diperbesar dari 15px */
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-    .content-wrapper {
-        padding: 20px 0;
-    }
-    
-    .blue-background-container {
-        width: 98%;
-        max-width: none;
-    }
-    
-    .blue-background {
-        padding: 30px 20px;
-        min-height: 550px;
-    }
-    
-    .card {
-        width: 98%;
-        max-width: none;
-    }
-    
-    .color-grid {
-        grid-template-columns: repeat(8, 1fr);
-        gap: 6px;
-    }
-    
-    .color-btn {
-        width: 35px;
-        height: 35px;
-    }
-    
-    .app-title {
-        font-size: 1.6rem;
-        margin-bottom: 25px;
-    }
-    
-    .color-container {
-        max-width: 450px;
-        padding: 15px;
-    }
-    
-    .form-control {
-        max-width: 250px;
-        height: 40px;
-    }
-    
-    .btn-primary {
-        padding: 12px 35px;
-        font-size: 1.1rem;
-        min-width: 200px;
-    }
-}
-
-@media (max-width: 576px) {
-    .blue-background {
-        padding: 25px 15px;
-        min-height: 500px;
-    }
-    
-    .color-grid {
-        grid-template-columns: repeat(6, 1fr);
-        gap: 4px;
-    }
-    
-    .color-btn {
-        width: 32px;
-        height: 32px;
-    }
-    
-    .selected-color-item {
-        width: 40px;
-        height: 40px;
-    }
-    
-    .app-title {
-        font-size: 1.4rem;
-        margin-bottom: 20px;
-    }
-    
-    .form-control {
-        max-width: 220px;
-        height: 38px;
-    }
-    
-    .color-container {
-        max-width: 350px;
-        padding: 12px;
-    }
-    
-    .btn-primary {
-        min-width: 180px;
-        padding: 10px 30px;
-        font-size: 1rem;
-    }
-}
-
-@media (max-width: 400px) {
-    .color-grid {
-        grid-template-columns: repeat(5, 1fr);
-        gap: 3px;
-    }
-    
-    .color-btn {
-        width: 28px;
-        height: 28px;
-    }
-    
-    .blue-background-container {
-        width: 100%;
-    }
-    
-    .color-container {
-        max-width: 300px;
-        padding: 10px;
-    }
 }
