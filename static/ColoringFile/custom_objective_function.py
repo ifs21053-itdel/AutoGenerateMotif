@@ -4,26 +4,31 @@ def calculate_user_color_preferences(image_hsv):
     # Extract unique HSV combinations
     unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
-    # Convert Hue to 0-360 range
-    unique_colors[:, 0] = (unique_colors[:, 0].astype(np.int32) * 2) % 360
+    # Convert to proper ranges (H: 0-360, S: 0-100, V: 0-100)
+    converted_colors = []
+    for color in unique_colors:
+        h, s, v = color
+        # Convert hue to 0-360
+        h_converted = int(h) * 2  # Since OpenCV uses 0-179 for hue
+        # Convert saturation and value to 0-100
+        s_converted = int(s) * 100 / 255
+        v_converted = int(v) * 100 / 255
+        converted_colors.append([h_converted, s_converted, v_converted])
     
     # User preferences
-    user_preferences = np.array([[353, 51, 28], [359, 91, 42], [50, 26, 100]])
+    user_preferences = [[0, 0, 0], [353, 51, 28], [359, 91, 42], [0, 0, 100]]
     
     # Calculate fitness
-    fitness = 0.0
-    for color in unique_colors:
-        for pref in user_preferences:
-            # Calculate Euclidean distance in HSV space
-            hue_diff = min(abs(color[0] - pref[0]), 360 - abs(color[0] - pref[0])) / 180.0
-            sat_diff = abs(color[1] - pref[1]) / 255.0
-            val_diff = abs(color[2] - pref[2]) / 255.0
-            distance = np.sqrt(hue_diff**2 + sat_diff**2 + val_diff**2)
-            similarity = 1.0 - distance
-            fitness += max(0, similarity)  # Ensure non-negative
+    if len(converted_colors) != len(user_preferences):
+        fitness = 0.0
+    else:
+        total_diff = 0.0
+        for uc, up in zip(sorted(converted_colors), sorted(user_preferences)):
+            h_diff = min(abs(uc[0] - up[0]), 360 - abs(uc[0] - up[0])) / 360.0
+            s_diff = abs(uc[1] - up[1]) / 100.0
+            v_diff = abs(uc[2] - up[2]) / 100.0
+            total_diff += h_diff + s_diff + v_diff
+        max_diff = len(user_preferences) * 3  # Maximum possible difference
+        fitness = 1.0 - (total_diff / max_diff)
     
-    # Normalize fitness by number of unique colors and preferences
-    if len(unique_colors) > 0:
-        fitness /= (len(unique_colors) * len(user_preferences))
-    
-    return fitness
+    return max(0.0, fitness)  # Ensure fitness is not negative
