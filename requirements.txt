@@ -9,3 +9,5 @@ django-seeder
 django-seed
 opencv-python
 python-decouple
+pymoo==0.6.1
+pymoode==0.3.0
