@@ -5,20 +5,14 @@ body {
     margin: 0;
     background-color: #f5f5f5;
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    justify-content: center; /* Center content vertically */
-    align-items: center; /* Center content horizontally */
 }
 
 .content-wrapper {
-    flex: 1;
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 30px 0;
-    position: relative;
-    width: 100%; /* Ensure it takes full width to center its child */
+    width: 100%;
 }
 
 .blue-background-container {
@@ -36,10 +30,10 @@ body {
     width: 100%;
     border-radius: 15px;
     overflow: hidden;
-    display: flex; /* Use flexbox for internal alignment */
+    display: flex;
     flex-direction: column;
-    align-items: center; /* Center items horizontally within the blue background */
-    justify-content: center; /* Center items vertically within the blue background */
+    align-items: center;
+    justify-content: center;
 }
 
 .blue-background::after {
@@ -62,13 +56,12 @@ body {
     background-color: #fff;
     z-index: 10;
     position: relative;
-    padding: 20px; /* Add internal padding to the card */
+    padding: 20px;
 }
 
 .card-body {
-    padding: 1.5rem !important; /* Override default p-4 from Bootstrap if present */
+    padding: 1.5rem !important;
 }
-
 
 .color-container {
     border: 1px solid #ddd;
@@ -84,18 +77,18 @@ body {
     display: grid;
     grid-template-columns: repeat(10, 1fr);
     gap: 8px;
-    justify-items: center; /* Center items within grid cells */
-    align-items: center; /* Center items within grid cells */
+    justify-items: center;
+    align-items: center;
 }
 
-.color-item { /* Renamed from .color-btn to match HTML */
+.color-item {
     width: 40px;
     height: 40px;
     border-radius: 4px;
     border: 2px solid transparent;
     cursor: pointer;
     transition: all 0.2s ease;
-    box-sizing: border-box; /* Include padding and border in the element's total width and height */
+    box-sizing: border-box;
 }
 
 .color-item:hover {
@@ -116,9 +109,9 @@ body {
     font-size: 1.2rem;
     font-weight: 500;
     min-width: 250px;
-    color: white; /* Ensure text is white */
+    color: white;
     cursor: pointer;
-    display: inline-flex; /* For spinner alignment */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 }
@@ -144,7 +137,7 @@ body {
     border-radius: 4px;
     border: 1px solid #ced4da;
     font-size: 1rem;
-    padding: 0.375rem 0.75rem; /* Standard Bootstrap padding */
+    padding: 0.375rem 0.75rem;
 }
 
 .form-control:focus {
@@ -179,18 +172,19 @@ body {
 #downloadImageBtn {
     display: block;
     padding: 18px 60px;
-    font-size: 1.3rem; /* Contoh: 1.3rem (sesuaikan sesuai keinginan) */
+    font-size: 1.3rem;
     width: 100%;
-    max-width: 300px; /* Tingkatkan max-width agar tombol bisa lebih lebar */
-    margin-top: 20px; /* Tambahkan jarak di atas tombol jika perlu */
+    max-width: 300px;
+    margin-top: 20px;
     margin-left: auto;
     margin-right: auto;
-    border-radius: 8px; /* Contoh: 8px */
+    border-radius: 8px;
 }
 
 .image-section .app-title {
     color: white;
 }
+
 .image-section p#noImageMessage {
     color: white;
 }
@@ -218,7 +212,7 @@ body {
     border: 1px solid #ccc;
 }
 
-.selected-color-box .remove-color-btn { /* Renamed for clarity */
+.selected-color-box .remove-color-btn {
     position: absolute;
     top: -10px;
     right: -10px;
@@ -235,7 +229,7 @@ body {
     box-shadow: 0 1px 3px rgba(0,0,0,0.2);
     border: 1px solid #ddd;
     font-weight: bold;
-    line-height: 1; /* Adjust line-height for better centering of 'x' */
+    line-height: 1;
 }
 
 .selected-color-box .remove-color-btn:hover {
@@ -256,7 +250,6 @@ body {
     border-radius: 20px;
 }
 
-/* Result Image Styling */
 .result-image {
     max-width: 100%;
     height: auto;
@@ -266,11 +259,10 @@ body {
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
 }
 
-/* Loading Spinner */
 #loadingSpinner {
-    display: none; /* Sembunyikan secara default */
-    border: 4px solid rgba(255, 255, 255, 0.3); /* Lighter border for contrast on blue button */
-    border-left-color: #ffffff; /* White color for the spinning part */
+    display: none;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    border-left-color: #ffffff;
     border-radius: 50%;
     width: 24px;
     height: 24px;
@@ -278,14 +270,14 @@ body {
     margin-left: 10px;
     vertical-align: middle;
 }
+
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 
-/* Error Message */
-.error-message { /* Changed from #errorMessage to .error-message */
-    color: #dc3545; /* Bootstrap red for error */
+.error-message {
+    color: #dc3545;
     font-weight: bold;
     margin-top: 15px;
 }
@@ -414,52 +406,4 @@ body {
         max-width: 300px;
         padding: 10px;
     }
-}
-
-.selected-colors-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px; 
-    justify-content: center;
-    margin: 25px auto; 
-    max-width: 650px; 
-    min-height: 60px; 
-    border: 1px dashed #ddd;
-    border-radius: 8px;
-    padding: 15px; 
-    background-color: #fafafa;
-}
-
-.selected-color-item {
-    width: 45px; /* Diperbesar dari 40px */
-    height: 45px; /* Diperbesar dari 40px */
-    border-radius: 4px;
-    position: relative;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    border: 1px solid #ccc;
-}
-
-.selected-color-item .remove-btn {
-    position: absolute;
-    top: -10px; /* Diperbesar dari -8px */
-    right: -10px; /* Diperbesar dari -8px */
-    background: white;
-    color: red;
-    border-radius: 50%;
-    width: 22px; /* Diperbesar dari 20px */
-    height: 22px; /* Diperbesar dari 20px */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 14px; /* Diperbesar dari 12px */
-    cursor: pointer;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    border: 1px solid #ddd;
-    font-weight: bold;
-}
-
-.selected-color-item .remove-btn:hover {
-    background-color: #ff4444;
-    color: white;
-    transform: scale(1.1);
 }
