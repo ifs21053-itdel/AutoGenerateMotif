@@ -523,13 +523,16 @@ def coloring_view(request):
             'hsv': color_thread.hsv
         })
 
+    ulos_colors_json_data_for_js = json.dumps(colors_for_template)
+
     if request.method == 'GET':
         context = {
             'ulos_types': ulos_types,
             'ulos_colors': colors_for_template,
+            'ulos_colors_json_data': ulos_colors_json_data_for_js,
             'colored_image_url': None,
             'selected_ulos_type': '',
-            'selected_colors_codes': [],
+            'selected_colors_codes_str': '',
         }
         return render(request, '../templates/pewarnaan.html', context)
 
@@ -540,12 +543,15 @@ def coloring_view(request):
         
         selected_colors_codes = [code for code in selected_colors_codes if code]
 
+        base_dir_for_coloring = os.path.join(settings.BASE_DIR, 'static', 'ColoringFile')
+
         base_image_filename = f"{selected_ulos_type.lower()}_grayscale.png"
         
         base_image_path = os.path.join(
             settings.BASE_DIR,
             'static',
             'ColoringFile',
+            base_dir_for_coloring,
             base_image_filename
         )
 
