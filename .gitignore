@@ -1,1 +1,16 @@
 /venv
+
+# Byte-code files
+*.pyc
+__pycache__/
+
+# Django stuff
+.DS_Store
+*.sqlite3
+/media
+/static
+
+# Env
+.env
+venv/
+env/

@@ -45,7 +45,7 @@ key_file_path = os.path.join(
     settings.BASE_DIR,
     'static',
     'ColoringFile',
-    'llm_api.txt'
+    'deepseek_api.txt'
     )
 with open(key_file_path, "r") as key_file:
     api_key = key_file.readline().strip()

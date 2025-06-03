@@ -511,40 +511,6 @@ def coloring_view(request):
     ulos_types = UlosCharacteristic.objects.all()
     ulos_colors_from_db = UlosColorThread.objects.all()
 
-    # color_names = {
-    #     'C001': 'Hitam',
-    #     'C002': 'Merah Tua',
-    #     'C003': 'Merah',
-    #     'C004': 'Merah Marun',
-    #     'C005': 'Merah Hati',
-    #     'C006': 'Merah Terang',
-    #     'C007': 'Oranye',
-    #     'C008': 'Magenta',
-    #     'C009': 'Ungu',
-    #     'C010': 'Pink',
-    #     'C011': 'Oranye Terang',
-    #     'C012': 'Coklat',
-    #     'C013': 'Coklat Muda',
-    #     'C014': 'Kuning Tua',
-    #     'C015': 'Kuning',
-    #     'C016': 'Krem',
-    #     'C017': 'Putih',
-    #     'C018': 'Kuning Muda',
-    #     'C019': 'Kuning Cerah',
-    #     'C020': 'Hijau Muda',
-    #     'C021': 'Hijau',
-    #     'C022': 'Hijau Tua',
-    #     'C023': 'Hijau Terang',
-    #     'C024': 'Hijau Neon',
-    #     'C025': 'Hijau Tosca',
-    #     'C026': 'Biru Muda',
-    #     'C027': 'Biru Langit',
-    #     'C028': 'Biru',
-    #     'C029': 'Abu-abu',
-    #     'C030': 'Biru Tua',
-    #     'C031': 'Ungu'
-    # }
-
     colors_for_template = []
     for color_thread in ulos_colors_from_db:
         h_str, s_str, v_str = color_thread.hsv.split(',')
@@ -555,7 +521,6 @@ def coloring_view(request):
             'code': color_thread.CODE,
             'hex_color': hex_color,
             'hsv': color_thread.hsv,
-            # 'name': color_names.get(color_thread.CODE, color_thread.CODE)
         })
 
     ulos_colors_json_data_for_js = json.dumps(colors_for_template)
@@ -574,27 +539,31 @@ def coloring_view(request):
     elif request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         selected_ulos_type = request.POST.get('jenisUlos')
         selected_color_codes_str = request.POST.get('selectedColors')
-        selected_colors_codes = selected_color_codes_str.split(',') if selected_color_codes_str else []
         
+        selected_motif_id = request.POST.get('selectedMotif') 
+
+        selected_colors_codes = selected_color_codes_str.split(',') if selected_color_codes_str else []
         selected_colors_codes = [code for code in selected_colors_codes if code]
 
-        base_dir_for_coloring = os.path.join(settings.BASE_DIR, 'static', 'ColoringFile')
+        if not selected_ulos_type or len(selected_colors_codes) < 2:
+            return JsonResponse({'error': 'Please select Ulos type and at least 2 colors.'}, status=400)
 
-        base_image_filename = f"{selected_ulos_type.lower()}_grayscale.png"
-        
+        if not selected_motif_id: 
+            return JsonResponse({'error': 'Please select an Ulos motif.'}, status=400)
+
+        base_image_filename = f"{selected_motif_id}.png"
+
         base_image_path = os.path.join(
             settings.BASE_DIR,
             'static',
-            'ColoringFile',
-            base_dir_for_coloring,
+            'img',
+            'motifs',
+            selected_ulos_type,
             base_image_filename
         )
 
         if not os.path.exists(base_image_path):
-            return JsonResponse({'error': f'Base image not found for {selected_ulos_type} at {base_image_path}.'}, status=400)
-            
-        if not selected_ulos_type or len(selected_colors_codes) < 2:
-            return JsonResponse({'error': 'Please select Ulos type and at least 2 colors.'}, status=400)
+            return JsonResponse({'error': f'Motif image not found for {selected_motif_id} at {base_image_path}. Please ensure the motif image exists on the server.'}, status=400)
 
         try:
             colored_image_url = main_coloring_process(
@@ -610,9 +579,10 @@ def coloring_view(request):
         except Exception as e:
             print(f"Error during coloring process: {e}")
             return JsonResponse({'error': f'An internal error occurred: {str(e)}'}, status=500)
-    
-    return JsonResponse({'error': 'Invalid request'}, status=400)
 
+
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+    
 def SignupPage(request):
     if request.user.is_authenticated:
          return redirect('home')
