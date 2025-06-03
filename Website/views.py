@@ -511,6 +511,40 @@ def coloring_view(request):
     ulos_types = UlosCharacteristic.objects.all()
     ulos_colors_from_db = UlosColorThread.objects.all()
 
+    # color_names = {
+    #     'C001': 'Hitam',
+    #     'C002': 'Merah Tua',
+    #     'C003': 'Merah',
+    #     'C004': 'Merah Marun',
+    #     'C005': 'Merah Hati',
+    #     'C006': 'Merah Terang',
+    #     'C007': 'Oranye',
+    #     'C008': 'Magenta',
+    #     'C009': 'Ungu',
+    #     'C010': 'Pink',
+    #     'C011': 'Oranye Terang',
+    #     'C012': 'Coklat',
+    #     'C013': 'Coklat Muda',
+    #     'C014': 'Kuning Tua',
+    #     'C015': 'Kuning',
+    #     'C016': 'Krem',
+    #     'C017': 'Putih',
+    #     'C018': 'Kuning Muda',
+    #     'C019': 'Kuning Cerah',
+    #     'C020': 'Hijau Muda',
+    #     'C021': 'Hijau',
+    #     'C022': 'Hijau Tua',
+    #     'C023': 'Hijau Terang',
+    #     'C024': 'Hijau Neon',
+    #     'C025': 'Hijau Tosca',
+    #     'C026': 'Biru Muda',
+    #     'C027': 'Biru Langit',
+    #     'C028': 'Biru',
+    #     'C029': 'Abu-abu',
+    #     'C030': 'Biru Tua',
+    #     'C031': 'Ungu'
+    # }
+
     colors_for_template = []
     for color_thread in ulos_colors_from_db:
         h_str, s_str, v_str = color_thread.hsv.split(',')
@@ -520,7 +554,8 @@ def coloring_view(request):
         colors_for_template.append({
             'code': color_thread.CODE,
             'hex_color': hex_color,
-            'hsv': color_thread.hsv
+            'hsv': color_thread.hsv,
+            # 'name': color_names.get(color_thread.CODE, color_thread.CODE)
         })
 
     ulos_colors_json_data_for_js = json.dumps(colors_for_template)
