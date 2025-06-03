@@ -1,6 +1,5 @@
 from django.db import models
 
-#Create Model Here
 class MotifForm(models.Model):
     imgBefore = models.TextField()
     imgAfter  = models.TextField()
