@@ -1,16 +1,6 @@
 /venv
 
-# Byte-code files
-*.pyc
+# Python bytecode
 __pycache__/
-
-# Django stuff
-.DS_Store
-*.sqlite3
-/media
-/static
-
-# Env
-.env
-venv/
-env/
+*.pyc
+*.pyo
