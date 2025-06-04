@@ -582,7 +582,21 @@ def coloring_view(request):
 
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
-    
+
+@login_required(login_url='login')
+def get_ulos_motifs(request):
+    jenis_ulos = request.GET.get('jenis_ulos')
+    motifs_data = []
+    if jenis_ulos:
+        motif_dir = os.path.join(settings.BASE_DIR, 'static', 'img', 'motifs', jenis_ulos.lower())
+        if os.path.exists(motif_dir) and os.path.isdir(motif_dir):
+            for i, filename in enumerate(sorted(os.listdir(motif_dir))):
+                if filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                    motif_id = os.path.splitext(filename)[0]
+                    motif_src = os.path.join(settings.STATIC_URL, 'img', 'motifs', jenis_ulos.lower(), filename)
+                    motifs_data.append({'id': motif_id, 'src': motif_src})
+    return JsonResponse(motifs_data, safe=False)
+
 def SignupPage(request):
     if request.user.is_authenticated:
          return redirect('home')
@@ -593,7 +607,6 @@ def SignupPage(request):
         pass2=request.POST.get('password2')
         
         if not re.match(r"^[a-zA-Z0-9_]+$", uname):
-            # username is not valid, return an error response
             messages.info(request, 'Username tidak menerima adanya spasi dan simbol lainnya kecuali tanda "_"')
             return render(request,'signup.html', {'uname': uname,'email': email,'pass1': pass1,'pass2': pass2 })
         

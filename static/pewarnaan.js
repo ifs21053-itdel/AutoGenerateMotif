@@ -2,53 +2,15 @@ $(document).ready(function() {
     let selectedColorCodes = [];
     let selectedMotif = '';
 
-    function generateMotifData(jenisUlos, motifNumber) {
-        const id = `${jenisUlos.toLowerCase()}${motifNumber}`;
-        const src = `/static/img/motifs/${jenisUlos.toLowerCase()}/${id}.png`;
-        return { id, src };
-    }
-
-    const ulosMotifs = {};
-    const ulosTypes = ['Harungguan', 'Puca', 'Sadum'];
-    for (const jenisUlos of ulosTypes) {
-        ulosMotifs[jenisUlos] = [];
-        for (let i = 1; i <= 5; i++) {
-            ulosMotifs[jenisUlos].push(generateMotifData(jenisUlos, i));
-        }
-    }
-
     const colorNames = {
-        'C001': 'Hitam',
-        'C002': 'Merah Tua',
-        'C003': 'Merah',
-        'C004': 'Merah Marun',
-        'C005': 'Merah Hati',
-        'C006': 'Merah Terang',
-        'C007': 'Oranye',
-        'C008': 'Magenta',
-        'C009': 'Ungu',
-        'C010': 'Pink',
-        'C011': 'Oranye Terang',
-        'C012': 'Coklat',
-        'C013': 'Coklat Muda',
-        'C014': 'Kuning Tua',
-        'C015': 'Kuning',
-        'C016': 'Krem',
-        'C017': 'Putih',
-        'C018': 'Kuning Muda',
-        'C019': 'Kuning Cerah',
-        'C020': 'Hijau Muda',
-        'C021': 'Hijau',
-        'C022': 'Hijau Tua',
-        'C023': 'Hijau Terang',
-        'C024': 'Hijau Neon',
-        'C025': 'Hijau Tosca',
-        'C026': 'Biru Muda',
-        'C027': 'Biru Langit',
-        'C028': 'Biru',
-        'C029': 'Abu-abu',
-        'C030': 'Biru Tua',
-        'C031': 'Ungu'
+        'C001': 'Hitam', 'C002': 'Merah Tua', 'C003': 'Merah', 'C004': 'Merah Marun',
+        'C005': 'Merah Hati', 'C006': 'Merah Terang', 'C007': 'Oranye', 'C008': 'Magenta',
+        'C009': 'Ungu', 'C010': 'Pink', 'C011': 'Oranye Terang', 'C012': 'Coklat',
+        'C013': 'Coklat Muda', 'C014': 'Kuning Tua', 'C015': 'Kuning', 'C016': 'Krem',
+        'C017': 'Putih', 'C018': 'Kuning Muda', 'C019': 'Kuning Cerah', 'C020': 'Hijau Muda',
+        'C021': 'Hijau', 'C022': 'Hijau Tua', 'C023': 'Hijau Terang', 'C024': 'Hijau Neon',
+        'C025': 'Hijau Tosca', 'C026': 'Biru Muda', 'C027': 'Biru Langit', 'C028': 'Biru',
+        'C029': 'Abu-abu', 'C030': 'Biru Tua', 'C031': 'Ungu'
     };
 
     const selectedColorsContainer = $('#selectedColorsContainer');
@@ -68,92 +30,106 @@ $(document).ready(function() {
 
     const ulosColorsData = JSON.parse($('#ulosColorsJsonData').val() || '[]');
 
-    // Inisialisasi penanganan klik pada item warna
     $('.color-box').on('click', function() {
         const colorCode = $(this).data('code');
         const index = selectedColorCodes.indexOf(colorCode);
 
         if (index > -1) {
-            // Warna sudah dipilih, hapus
             selectedColorCodes.splice(index, 1);
             $(this).removeClass('selected');
         } else {
-            // Warna belum dipilih, tambahkan
             selectedColorCodes.push(colorCode);
             $(this).addClass('selected');
         }
         updateSelectedColorsDisplay();
     });
 
-    jenisUlosSelect.on('change', function() {
+    jenisUlosSelect.on('change', async function() {
         const selectedUlosType = $(this).val();
 
         if (motifCarousel.hasClass('slick-initialized')) {
             motifCarousel.slick('unslick');
         }
-
         motifCarousel.empty();
 
         selectedMotif = '';
         selectedMotifInput.val('');
 
         if (selectedUlosType) {
-            if (ulosMotifs[selectedUlosType]) {
+            try {
+                const response = await fetch(`/get_motifs/?jenis_ulos=${selectedUlosType}`);
+                if (!response.ok) {
+                    throw new Error('Failed to fetch motif data from server.');
+                }
+                const motifsData = await response.json();
 
-                ulosMotifs[selectedUlosType].forEach(function(motif) {
-                    const slide = $('<div>').addClass('motif-slide');
-                    const img = $('<img>')
-                        .attr('src', motif.src)
-                        .attr('alt', 'Motif ' + selectedUlosType)
-                        .attr('data-motif-id', motif.id);
-                    slide.append(img);
-                    motifCarousel.append(slide);
-                });
-
-                setTimeout(function() {
-                    motifCarousel.slick({
-                        dots: true,
-                        infinite: true,
-                        speed: 300,
-                        slidesToShow: 3,
-                        slidesToScroll: 1,
-                        centerMode: true,
-                        focusOnSelect: true,
-                        arrows: true,
-                        prevArrow: '<button type="button" class="slick-prev">Previous</button>',
-                        nextArrow: '<button type="button" class="slick-next">Next</button>',
-                        responsive: [
-                            {
-                                breakpoint: 768,
-                                settings: {
-                                    slidesToShow: 2,
-                                    slidesToScroll: 1,
-                                    arrows: true
-                                }
-                            },
-                            {
-                                breakpoint: 576,
-                                settings: {
-                                    slidesToShow: 1,
-                                    slidesToScroll: 1,
-                                    arrows: true
-                                }
-                            }
-                        ]
+                if (motifsData.length > 0) {
+                    motifsData.forEach(function(motif) {
+                        const slide = $('<div>').addClass('motif-slide');
+                        const img = $('<img>')
+                            .attr('src', motif.src)
+                            .attr('alt', 'Motif ' + selectedUlosType)
+                            .attr('data-motif-id', motif.id);
+                        slide.append(img);
+                        motifCarousel.append(slide);
                     });
 
-                    motifCarouselContainer.show();
+                    setTimeout(function() {
+                        motifCarousel.slick({
+                            // --- PERUBAHAN DI SINI UNTUK DOTS ---
+                            dots: true,
+                            infinite: true,
+                            speed: 300,
+                            slidesToShow: 3,
+                            slidesToScroll: 1,
+                            centerMode: true,
+                            focusOnSelect: true,
+                            arrows: true,
+                            prevArrow: '<button type="button" class="slick-prev">Previous</button>',
+                            nextArrow: '<button type="button" class="slick-next">Next</button>',
+                            customPaging: function(slider, i) {
+                                const maxDots = 5;
+                                if (i < maxDots) {
+                                    return '<button type="button">' + (i + 1) + '</button>';
+                                }
+                                return '';
+                            },
+                            responsive: [
+                                {
+                                    breakpoint: 768,
+                                    settings: {
+                                        slidesToShow: 2,
+                                        slidesToScroll: 1,
+                                        arrows: true
+                                    }
+                                },
+                                {
+                                    breakpoint: 576,
+                                    settings: {
+                                        slidesToShow: 1,
+                                        slidesToScroll: 1,
+                                        arrows: true
+                                    }
+                                }
+                            ]
+                        });
 
-                    motifCarousel.attr('data-active-ulos', selectedUlosType);
+                        motifCarouselContainer.show();
+                        motifCarousel.attr('data-active-ulos', selectedUlosType);
 
-                    if (ulosMotifs[selectedUlosType].length > 0) {
-                        const firstMotif = ulosMotifs[selectedUlosType][0];
+                        const firstMotif = motifsData[0];
                         selectedMotif = firstMotif.id;
                         selectedMotifInput.val(selectedMotif);
                         motifCarousel.find('.slick-slide').eq(0).addClass('selected');
-                    }
-                }, 50);
-            } else {
+
+                    }, 50);
+                } else {
+                    motifCarouselContainer.hide();
+                    errorMessage.text('Tidak ada motif yang tersedia untuk jenis Ulos ini.');
+                }
+            } catch (error) {
+                console.error("Error fetching motifs:", error);
+                errorMessage.text('Failed to load motifs. Please try again.');
                 motifCarouselContainer.hide();
             }
         } else {
@@ -165,7 +141,6 @@ $(document).ready(function() {
         e.preventDefault();
 
         $('.motif-slide').removeClass('selected');
-
         $(this).addClass('selected');
 
         const img = $(this).find('img');
@@ -179,21 +154,16 @@ $(document).ready(function() {
 
     function updateSelectedColorsDisplay() {
         selectedColorsContainer.empty();
-
         selectedColorCodes.forEach(function(code) {
             const colorObj = ulosColorsData.find(color => color.code === code);
-
             if (colorObj) {
                 const colorContainer = $('<div>').addClass('selected-color-container');
-
                 const codeLabel = $('<div>')
                     .addClass('selected-color-name')
                     .text(code);
-
                 const colorDiv = $('<div>')
                     .addClass('selected-color-box')
                     .css('background-color', colorObj.hex_color);
-
                 const removeBtn = $('<span>')
                     .addClass('remove-color-btn')
                     .html('&times;')
@@ -205,7 +175,6 @@ $(document).ready(function() {
                 selectedColorsContainer.append(colorContainer);
             }
         });
-
         colorCounter.text(`${selectedColorCodes.length} warna dipilih`);
         selectedColorsInput.val(selectedColorCodes.join(','));
     }
@@ -221,9 +190,7 @@ $(document).ready(function() {
     $(document).on('click', '.remove-color-btn', function() {
         const colorCodeToRemove = $(this).attr('data-code');
         selectedColorCodes = selectedColorCodes.filter(code => code !== colorCodeToRemove);
-
         $(`.color-box[data-code="${colorCodeToRemove}"]`).removeClass('selected');
-
         updateSelectedColorsDisplay();
     });
 
@@ -284,7 +251,6 @@ $(document).ready(function() {
                 const imageUrl = '/static/' + data.colored_image_url;
                 coloredImage.attr('src', imageUrl).show();
                 noImageMessage.hide();
-
                 downloadImageBtn.attr('href', imageUrl);
                 downloadImageBtn.show();
             } else if (data.error) {
@@ -295,6 +261,7 @@ $(document).ready(function() {
 
         } catch (error) {
             errorMessage.text(`Gagal memproses pewarnaan. Coba lagi.`);
+            console.error("Submission error:", error);
         } finally {
             loadingSpinner.hide();
             submitButton.prop('disabled', false);
