@@ -54,14 +54,16 @@ body {
   margin-bottom: 20px;
 }
 
+/* Perbaikan untuk Slick Carousel */
 .motif-carousel-wrapper {
   max-width: 650px;
   margin: 0 auto;
   border: 1px solid #ddd;
   border-radius: 8px;
-  padding: 15px;
+  padding: 15px 40px; /* Padding untuk arrow */
   background-color: #fff;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  position: relative;
 }
 
 .motif-carousel {
@@ -69,21 +71,30 @@ body {
   position: relative;
 }
 
+/* Perbaikan untuk slides */
 .motif-slide {
   padding: 10px;
   text-align: center;
   outline: none;
   cursor: pointer;
   transition: transform 0.3s ease;
+  height: 220px; /* Tetapkan tinggi tetap */
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Perbaikan ukuran gambar */
 .motif-slide img {
-  max-width: 100%;
-  height: 200px;
-  object-fit: contain;
+  max-width: 180px !important; /* Batasi lebar maksimum */
+  max-height: 200px !important; /* Batasi tinggi maksimum */
+  width: auto !important; /* Biarkan lebar menyesuaikan */
+  height: auto !important; /* Biarkan tinggi menyesuaikan */
+  object-fit: contain !important; /* Pastikan gambar tetap proporsional */
   border: 2px solid transparent;
   border-radius: 4px;
   transition: all 0.3s ease;
+  margin: 0 auto; /* Pusatkan gambar */
 }
 
 .motif-slide.selected img {
@@ -94,6 +105,26 @@ body {
 
 .motif-slide:hover img {
   transform: scale(1.03);
+}
+
+/* Pusatkan Slick Track dan Slides */
+.slick-track {
+  display: flex !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.slick-slide {
+  float: none !important;
+  height: auto !important;
+}
+
+/* Ukuran untuk slide kontainer */
+.slick-slide > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
 }
 
 /* Override Slick Carousel styles */
@@ -114,6 +145,51 @@ body {
 .slick-prev:before, .slick-next:before {
   font-size: 30px;
   color: #002ba3;
+}
+
+/* Fix untuk dots */
+.slick-dots {
+  bottom: -25px;
+  display: flex !important;
+  justify-content: center;
+  width: 100%;
+}
+
+.slick-dots li {
+  margin: 0 5px;
+}
+
+/* Tambahan style untuk custom navigation */
+.custom-nav-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 15px auto 0;
+  padding: 0;
+  width: 100%;
+  text-align: center;
+}
+
+.custom-nav-container .slick-prev,
+.custom-nav-container .slick-next {
+  position: relative;
+  left: auto;
+  right: auto;
+  top: auto;
+  transform: none;
+  margin: 0 5px;
+  display: inline-block;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 50%;
+}
+
+.custom-nav-container .slick-prev:before,
+.custom-nav-container .slick-next:before {
+  font-size: 20px;
+  color: #002ba3;
+  opacity: 1;
 }
 
 .color-container {
@@ -209,6 +285,62 @@ body {
   font-weight: 500;
 }
 
+/* Styling untuk elemen select (dropdown) */
+select.form-control {
+  max-width: 300px;
+  margin: 0 auto;
+  height: 45px;
+  border-radius: 4px;
+  border: 1px solid #ced4da;
+  font-size: 1rem;
+  padding: 0.375rem 2.25rem 0.375rem 0.75rem; /* Tambahkan padding di kanan untuk ikon */
+  
+  /* Tambahkan ikon dropdown kustom */
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%23212529' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+  
+  /* Nonaktifkan tampilan default dropdown browser */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  
+  /* Tambahkan sedikit bayangan */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  
+  /* Tambahkan hover effect */
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, background-color 0.15s ease-in-out;
+}
+
+select.form-control:hover {
+  background-color: #f8f9fa;
+  border-color: #adb5bd;
+  cursor: pointer;
+}
+
+select.form-control:focus {
+  box-shadow: 0 0 0 0.2rem rgba(0, 43, 163, 0.25);
+  outline: none;
+  background-color: #fff;
+}
+
+/* Style agar dropdown terlihat lebih menonjol */
+.form-control-wrapper {
+  position: relative;
+  max-width: 300px;
+  margin: 0 auto;
+}
+
+/* Optional: Tambahkan teks "Klik untuk memilih" di bagian bawah dropdown */
+.dropdown-hint {
+  font-size: 0.8rem;
+  color: #6c757d;
+  text-align: center;
+  margin-top: 5px;
+  font-style: italic;
+}
+
 .form-control {
   max-width: 300px;
   margin: 0 auto;
@@ -225,14 +357,14 @@ body {
   outline: none;
 }
 
-.form-label {
-  font-size: 1.2rem;
-  margin-bottom: 20px;
-  display: block;
+
+.jenis-ulos-label {
+  font-size: 1.3rem;
+  font-weight: bold;
   text-align: center;
-  font-weight: 500;
-  color: #333;
+  width: 100%;
 }
+
 
 .image-section {
   display: flex;
@@ -242,12 +374,10 @@ body {
 }
 
 #coloredImage {
-    display: block;
-    max-width: 500px;
-    height: auto;
-    margin-bottom: 10px;
-    margin-left: auto;
-    margin-right: auto;
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-bottom: 10px;
 }
 
 #downloadImageBtn {

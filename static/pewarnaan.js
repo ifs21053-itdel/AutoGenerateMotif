@@ -48,6 +48,9 @@ $(document).ready(function() {
             motifCarousel.slick('unslick');
         }
         motifCarousel.empty();
+        
+        // PENTING: Hapus container navigasi yang sudah ada untuk mencegah penambahan tombol
+        $('.custom-nav-container').remove();
 
         selectedMotif = '';
         selectedMotifInput.val('');
@@ -71,9 +74,13 @@ $(document).ready(function() {
                         motifCarousel.append(slide);
                     });
 
+                    // Buat div container untuk tombol navigasi setelah carousel
+                    const customNavContainer = $('<div class="custom-nav-container"></div>');
+                    $('.motif-carousel-wrapper').append(customNavContainer);
+
                     setTimeout(function() {
                         motifCarousel.slick({
-                            dots: true,
+                            dots: true, // Aktifkan dots navigasi
                             infinite: true,
                             speed: 300,
                             slidesToShow: 3,
@@ -81,14 +88,29 @@ $(document).ready(function() {
                             centerMode: true,
                             focusOnSelect: true,
                             arrows: true,
-                            prevArrow: '<button type="button" class="slick-prev">Previous</button>',
-                            nextArrow: '<button type="button" class="slick-next">Next</button>',
+                            appendArrows: $('.custom-nav-container'),
+                            prevArrow: '<button type="button" class="slick-prev">&#9664;</button>',
+                            nextArrow: '<button type="button" class="slick-next">&#9654;</button>',
                             customPaging: function(slider, i) {
-                                const maxDots = 5;
-                                if (i < maxDots) {
-                                    return '<button type="button">' + (i + 1) + '</button>';
+                                // Hanya tampilkan 5 dots di tengah
+                                const totalSlides = slider.slideCount;
+                                const middleDot = Math.floor(totalSlides / 2);
+                                
+                                // Logika untuk menampilkan hanya 5 dots di tengah
+                                if (totalSlides <= 5) {
+                                    // Jika total slide <= 5, tampilkan semua dots
+                                    return '<button type="button"></button>';
+                                } else {
+                                    // Jika total slide > 5, hanya tampilkan 5 dots di tengah
+                                    const startDot = Math.max(0, middleDot - 2);
+                                    const endDot = Math.min(totalSlides - 1, middleDot + 2);
+                                    
+                                    if (i >= startDot && i <= endDot) {
+                                        return '<button type="button"></button>';
+                                    } else {
+                                        return ''; // Tidak menampilkan dot ini
+                                    }
                                 }
-                                return '';
                             },
                             responsive: [
                                 {
@@ -110,13 +132,33 @@ $(document).ready(function() {
                             ]
                         });
 
+                        // Add event handler for slide change
+                        motifCarousel.on('afterChange', function(event, slick, currentSlide) {
+                            $('.motif-slide').removeClass('selected');
+                            $(slick.$slides[currentSlide]).addClass('selected');
+                            
+                            // Update selectedMotif
+                            const img = $(slick.$slides[currentSlide]).find('img');
+                            if (img.length) {
+                                selectedMotif = img.data('motif-id');
+                                selectedMotifInput.val(selectedMotif);
+                            }
+                        });
+
+                        // Force a refresh to ensure proper rendering
+                        motifCarousel.slick('refresh');
+
                         motifCarouselContainer.show();
                         motifCarousel.attr('data-active-ulos', selectedUlosType);
 
                         const firstMotif = motifsData[0];
                         selectedMotif = firstMotif.id;
                         selectedMotifInput.val(selectedMotif);
-                        motifCarousel.find('.slick-slide').eq(0).addClass('selected');
+                        
+                        // Select first slide after a short delay to ensure proper initialization
+                        setTimeout(function() {
+                            motifCarousel.find('.slick-slide:first').addClass('selected');
+                        }, 100);
 
                     }, 50);
                 } else {
@@ -280,7 +322,7 @@ $(document).ready(function() {
             } else {
                 errorMessage.text('Terjadi kesalahan tidak diketahui.');
             }
-            
+
         } catch (error) {
             errorMessage.text(`Gagal memproses pewarnaan. Coba lagi.`);
             console.error("Submission error:", error);
