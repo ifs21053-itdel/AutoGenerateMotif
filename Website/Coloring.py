@@ -380,6 +380,7 @@ def get_best_individual(result, unique_values, available_colors_list):
         
     return best_individual, best_color_dict_converted, best_scores
 
+
 def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base_image_path):
 
     print("\n--- Starting main_coloring_process ---")
@@ -394,14 +395,14 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
     n_colors = len(ulos_colors_codes)
     
     objective_function_code = create_custom_objective_function(ulos_type, api_key, ulos_colors_codes)
-  
+ 
     custom_obj_dir = os.path.join(settings.BASE_DIR, 'static', 'ColoringFile')
     os.makedirs(custom_obj_dir, exist_ok=True)
     temp_objective_file_path = os.path.join(custom_obj_dir, "custom_objective_function.py")
     
     with open(temp_objective_file_path, "w") as file:
         file.write(objective_function_code)
-  
+ 
     spec = importlib.util.spec_from_file_location("custom_obj_func_module", temp_objective_file_path)
     custom_obj_func_module = importlib.util.module_from_spec(spec)
     sys.modules["custom_obj_func_module"] = custom_obj_func_module
@@ -424,7 +425,7 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
     
     if gray_image is None or unique_values is None:
         print("ERROR: Could not load grayscale image or unique values. Aborting coloring process.")
-        return None
+        return None, None 
 
     problem = UlosColoringProblem(
         unique_grayscale_values=unique_values,
@@ -447,7 +448,23 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
 
     
     colored_image_rgb = apply_coloring(gray_image, best_color_dict)
-    return save_colored_image(colored_image_rgb, ulos_type)
+
+    hsv_to_code_map = {tuple(v): k for k, v in DB_ULOS_THREAD_COLORS.items()}
+    
+    used_color_codes = []
+    for hsv_value in best_color_dict.values():
+        hsv_tuple = tuple(hsv_value)
+        if hsv_tuple in hsv_to_code_map:
+            used_color_codes.append(hsv_to_code_map[hsv_tuple])
+        else:
+            print(f"WARNING: Generated HSV {hsv_value} not found in original DB colors.")
+
+    unique_used_color_codes = sorted(list(set(used_color_codes)))
+    print("HSV to Code Map:", hsv_to_code_map)
+    print("Used color codes:", used_color_codes)
+
+    relative_output_path = save_colored_image(colored_image_rgb, ulos_type)
+    return relative_output_path, unique_used_color_codes
 
 if __name__ == '__main__':
     pass

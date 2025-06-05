@@ -1,17 +1,10 @@
+// pewarnaan.js
 $(document).ready(function() {
     let selectedColorCodes = [];
     let selectedMotif = '';
 
-    const colorNames = {
-        'C001': 'Hitam', 'C002': 'Merah Tua', 'C003': 'Merah', 'C004': 'Merah Marun',
-        'C005': 'Merah Hati', 'C006': 'Merah Terang', 'C007': 'Oranye', 'C008': 'Magenta',
-        'C009': 'Ungu', 'C010': 'Pink', 'C011': 'Oranye Terang', 'C012': 'Coklat',
-        'C013': 'Coklat Muda', 'C014': 'Kuning Tua', 'C015': 'Kuning', 'C016': 'Krem',
-        'C017': 'Putih', 'C018': 'Kuning Muda', 'C019': 'Kuning Cerah', 'C020': 'Hijau Muda',
-        'C021': 'Hijau', 'C022': 'Hijau Tua', 'C023': 'Hijau Terang', 'C024': 'Hijau Neon',
-        'C025': 'Hijau Tosca', 'C026': 'Biru Muda', 'C027': 'Biru Langit', 'C028': 'Biru',
-        'C029': 'Abu-abu', 'C030': 'Biru Tua', 'C031': 'Ungu'
-    };
+    // No need for colorNames here if fetching from DB
+    // const colorNames = { ... };
 
     const selectedColorsContainer = $('#selectedColorsContainer');
     const colorCounter = $('#colorCounter');
@@ -27,6 +20,10 @@ $(document).ready(function() {
     const motifCarouselContainer = $('#motifCarouselContainer');
     const motifCarousel = $('#motifCarousel');
     const selectedMotifInput = $('#selectedMotifInput');
+
+    // New elements for displaying used colors
+    const usedColorsDisplay = $('#usedColorsDisplay');
+    const actualUsedColorsPalette = $('#actualUsedColorsPalette');
 
     const ulosColorsData = JSON.parse($('#ulosColorsJsonData').val() || '[]');
 
@@ -76,7 +73,6 @@ $(document).ready(function() {
 
                     setTimeout(function() {
                         motifCarousel.slick({
-                            // --- PERUBAHAN DI SINI UNTUK DOTS ---
                             dots: true,
                             infinite: true,
                             speed: 300,
@@ -201,6 +197,8 @@ $(document).ready(function() {
         coloredImage.hide();
         noImageMessage.show();
         downloadImageBtn.hide();
+        usedColorsDisplay.hide(); // Hide the used colors display initially
+        actualUsedColorsPalette.empty(); // Clear previous used colors
         loadingSpinner.show();
         submitButton.prop('disabled', true);
 
@@ -253,12 +251,36 @@ $(document).ready(function() {
                 noImageMessage.hide();
                 downloadImageBtn.attr('href', imageUrl);
                 downloadImageBtn.show();
+
+                // Display the used colors
+           if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
+                    actualUsedColorsPalette.empty(); // Clear previous colors
+                    data.used_colors.forEach(function(color) {
+                        const colorItem = $('<div>')
+                            .addClass('used-color-item')
+                            .attr('title', `Code: ${color.code}`); 
+                        const colorBox = $('<div>')
+                            .addClass('used-color-box')
+                            .css('background-color', color.hex_color);
+                        const colorCodeLabel = $('<div>')
+                            .addClass('used-color-code')
+                            .text(color.code);
+                        
+                        colorItem.append(colorBox);
+                        colorItem.append(colorCodeLabel);
+                        actualUsedColorsPalette.append(colorItem);
+                    });
+                    usedColorsDisplay.show(); // Make the container visible
+                } else {
+                    usedColorsDisplay.hide(); // Hide if no colors are returned or it's empty
+                }
+
             } else if (data.error) {
                 errorMessage.text(`Error: ${data.error}`);
             } else {
                 errorMessage.text('Terjadi kesalahan tidak diketahui.');
             }
-
+            
         } catch (error) {
             errorMessage.text(`Gagal memproses pewarnaan. Coba lagi.`);
             console.error("Submission error:", error);

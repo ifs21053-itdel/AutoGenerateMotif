@@ -533,6 +533,7 @@ def coloring_view(request):
             'colored_image_url': None,
             'selected_ulos_type': '',
             'selected_colors_codes_str': '',
+            'used_colors_display': [],
         }
         return render(request, '../templates/pewarnaan.html', context)
 
@@ -558,7 +559,7 @@ def coloring_view(request):
             'static',
             'img',
             'motifs',
-            selected_ulos_type,
+            selected_ulos_type, 
             base_image_filename
         )
 
@@ -566,14 +567,26 @@ def coloring_view(request):
             return JsonResponse({'error': f'Motif image not found for {selected_motif_id} at {base_image_path}. Please ensure the motif image exists on the server.'}, status=400)
 
         try:
-            colored_image_url = main_coloring_process(
+            # Capture both return values from main_coloring_process
+            colored_image_url, used_color_codes_list = main_coloring_process( 
                 selected_ulos_type,
                 selected_colors_codes,
                 base_image_path
             )
 
             if colored_image_url:
-                return JsonResponse({'colored_image_url': colored_image_url})
+                # Prepare the used colors for display in the frontend
+                used_colors_display = []
+                for code in used_color_codes_list:
+                    # Find the corresponding hex color from your initial colors_for_template list
+                    # It's crucial that `colors_for_template` contains the hex for each code.
+                    hex_val = next((item['hex_color'] for item in colors_for_template if item['code'] == code), '#FFFFFF') 
+                    used_colors_display.append({'code': code, 'hex_color': hex_val})
+
+                return JsonResponse({
+                    'colored_image_url': colored_image_url,
+                    'used_colors': used_colors_display, # This key must match what JS expects
+                })
             else:
                 return JsonResponse({'error': 'Failed to generate colored image.'}, status=500)
         except Exception as e:

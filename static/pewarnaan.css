@@ -242,10 +242,12 @@ body {
 }
 
 #coloredImage {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin-bottom: 10px;
+    display: block;
+    max-width: 500px;
+    height: auto;
+    margin-bottom: 10px;
+    margin-left: auto;
+    margin-right: auto;
 }
 
 #downloadImageBtn {
@@ -559,4 +561,62 @@ body {
     padding: 5px 8px;
     max-width: 300px;
   }
+}
+
+.used-colors-container {
+    background-color: rgba(255, 255, 255, 0.1); /* Slightly transparent background */
+    padding: 15px;
+    border-radius: 8px;
+    margin-top: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.used-colors-container h4 {
+    color: #fff; /* White text for heading */
+    font-size: 1.2em;
+    margin-bottom: 15px;
+}
+
+#actualUsedColorsPalette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px; /* Spacing between color items */
+    justify-content: center;
+}
+
+.used-color-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    width: 60px; /* Adjust width as needed */
+}
+
+.used-color-box {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%; /* Make it circular */
+    border: 2px solid #ccc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    margin-bottom: 5px;
+}
+
+.used-color-code {
+    color: #fff; /* White text for color code */
+    font-size: 0.8em;
+    word-break: break-all; /* Break long words */
+}
+
+/* Adjustments for smaller screens */
+@media (max-width: 576px) {
+    .used-color-item {
+        width: 50px; /* Slightly smaller for mobile */
+    }
+    .used-color-box {
+        width: 35px;
+        height: 35px;
+    }
+    .used-color-code {
+        font-size: 0.7em;
+    }
 }
