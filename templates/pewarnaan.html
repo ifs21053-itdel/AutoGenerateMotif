@@ -29,8 +29,20 @@
                         <form id="coloringForm" method="post" enctype="multipart/form-data">
                             {% csrf_token %}
                             
-                            <div class="mb-3 text-center">
-                                <label for="jenisUlos" class="form-label mb-2">Pilih Jenis Ulos:</label>
+                            <div class="mb-3 d-flex justify-content-center align-items-center flex-column">
+  <label for="jenisUlos" class="form-label jenis-ulos-label mb-2">Pilih Jenis Ulos:</label>
+  <select name="jenisUlos" id="jenisUlos" class="form-control d-block mx-auto">
+    <option value="">--Pilih Jenis Ulos--</option>
+    {% for ulos_type in ulos_types %}
+      <option value="{{ ulos_type.NAME }}" {% if selected_ulos_type == ulos_type.NAME %}selected{% endif %}>
+        {{ ulos_type.NAME }}
+      </option>
+    {% endfor %}
+  </select>
+</div>
+
+                            <!-- <div class="mb-3 text-center">
+                                <label for="jenisUlos" class="form-label jenis-ulos-label mb-2">Pilih Jenis Ulos:</label>
                                 <select name="jenisUlos" id="jenisUlos" class="form-control d-block mx-auto">
                                     <option value="">--Pilih Jenis Ulos--</option>
                                     {% for ulos_type in ulos_types %}
@@ -39,7 +51,7 @@
                                         </option>
                                     {% endfor %}
                                 </select>
-                            </div>
+                            </div> -->
                             
                             <!-- Carousel Motif Ulos -->
                             <div class="mb-3 text-center motif-carousel-container" id="motifCarouselContainer" style="display: none;">

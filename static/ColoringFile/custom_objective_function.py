@@ -1,29 +1,28 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Extract unique HSV combinations
+    # Preferensi warna pengguna dalam HSV (H:0-360, S:0-100, V:0-100)
+    user_preferences = np.array([[45, 100, 69], [10, 80, 97], [138, 100, 93]])
+    
+    # Ekstrak kombinasi unik HSV dari gambar
     unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
-    # Convert Hue to 0-360 range
-    hue = unique_colors[:, 0].astype(np.int32) * 2
-    saturation = unique_colors[:, 1].astype(np.int32)
-    value = unique_colors[:, 2].astype(np.int32)
+    # Konversi ke format yang sesuai (H:0-360, S:0-100, V:0-100)
+    h = (unique_colors[:, 0].astype(np.int32) * 2) % 360  # Konversi Hue ke 0-360
+    s = (unique_colors[:, 1].astype(np.float32) / 255) * 100  # Konversi Saturation ke 0-100
+    v = (unique_colors[:, 2].astype(np.float32) / 255) * 100  # Konversi Value ke 0-100
     
-    # User preferences
-    user_preferences = np.array([[359, 91, 42], [353, 51, 28]])
+    image_colors = np.column_stack((h, s, v))
     
-    # Calculate fitness
-    min_distance = float('inf')
+    # Hitung perbedaan dengan preferensi pengguna
+    min_distances = []
     for pref in user_preferences:
-        for h, s, v in zip(hue, saturation, value):
-            # Calculate Euclidean distance in HSV space
-            dh = min(abs(h - pref[0]), 360 - abs(h - pref[0])) / 360.0
-            ds = abs(s - pref[1]) / 255.0
-            dv = abs(v - pref[2]) / 255.0
-            distance = np.sqrt(dh**2 + ds**2 + dv**2)
-            if distance < min_distance:
-                min_distance = distance
+        # Hitung jarak Euclidean untuk setiap warna preferensi
+        distances = np.sqrt(np.sum((image_colors - pref) ** 2, axis=1))
+        min_distances.append(np.min(distances))
     
-    # Normalize fitness (closer distance -> higher fitness)
-    fitness = 1.0 - min_distance
+    # Hitung fitness berdasarkan jarak rata-rata terkecil
+    avg_min_distance = np.mean(min_distances)
+    fitness = 1 / (1 + avg_min_distance)  # Normalisasi agar fitness antara 0-1
+    
     return fitness
