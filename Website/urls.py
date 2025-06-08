@@ -18,6 +18,7 @@ from django.contrib import admin
 from django.urls import path
 from django.conf import settings
 from django.conf.urls.static import static
+from .views import generate_ulos_pdf
 
 urlpatterns = [
     path('admin/', admin.site.urls,),
@@ -49,6 +50,7 @@ urlpatterns = [
     path('register/', views.SignupPage, name='signup'),
     path('pewarnaan/', views.coloring_view, name='pewarnaan'),
     path('get_motifs/', views.get_ulos_motifs, name='get_ulos_motifs'),
+    path('generate-pdf/', generate_ulos_pdf, name='generate_pdf'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 

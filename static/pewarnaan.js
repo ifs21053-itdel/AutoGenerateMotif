@@ -1,10 +1,6 @@
-// pewarnaan.js
 $(document).ready(function() {
     let selectedColorCodes = [];
     let selectedMotif = '';
-
-    // No need for colorNames here if fetching from DB
-    // const colorNames = { ... };
 
     const selectedColorsContainer = $('#selectedColorsContainer');
     const colorCounter = $('#colorCounter');
@@ -16,12 +12,12 @@ $(document).ready(function() {
     const errorMessage = $('#errorMessage');
     const submitButton = $('#submitButton');
     const downloadImageBtn = $('#downloadImageBtn');
+    const downloadPdfBtn = $('#downloadPdfBtn');
     const jenisUlosSelect = $('#jenisUlos');
     const motifCarouselContainer = $('#motifCarouselContainer');
     const motifCarousel = $('#motifCarousel');
     const selectedMotifInput = $('#selectedMotifInput');
 
-    // New elements for displaying used colors
     const usedColorsDisplay = $('#usedColorsDisplay');
     const actualUsedColorsPalette = $('#actualUsedColorsPalette');
 
@@ -49,7 +45,6 @@ $(document).ready(function() {
         }
         motifCarousel.empty();
         
-        // PENTING: Hapus container navigasi yang sudah ada untuk mencegah penambahan tombol
         $('.custom-nav-container').remove();
 
         selectedMotif = '';
@@ -239,10 +234,12 @@ $(document).ready(function() {
         coloredImage.hide();
         noImageMessage.show();
         downloadImageBtn.hide();
-        usedColorsDisplay.hide(); // Hide the used colors display initially
-        actualUsedColorsPalette.empty(); // Clear previous used colors
+        downloadPdfBtn.hide();
+        usedColorsDisplay.hide();
+        actualUsedColorsPalette.empty();
         loadingSpinner.show();
         submitButton.prop('disabled', true);
+        // $('#downloadPdfBtn').show();
 
         const jenisUlos = $('#jenisUlos').val();
         const selectedColors = selectedColorsInput.val();
@@ -293,10 +290,11 @@ $(document).ready(function() {
                 noImageMessage.hide();
                 downloadImageBtn.attr('href', imageUrl);
                 downloadImageBtn.show();
+                downloadPdfBtn.show();
 
                 // Display the used colors
            if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
-                    actualUsedColorsPalette.empty(); // Clear previous colors
+                    actualUsedColorsPalette.empty();
                     data.used_colors.forEach(function(color) {
                         const colorItem = $('<div>')
                             .addClass('used-color-item')
