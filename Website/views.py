@@ -25,6 +25,13 @@ from django.http import JsonResponse
 import json 
 from django.conf import settings
 from django.utils.datastructures import MultiValueDictKeyError
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import inch
+from reportlab.lib.utils import ImageReader
+from io import BytesIO
+from PIL import Image
 
 
 @login_required(login_url='login')
@@ -540,7 +547,6 @@ def coloring_view(request):
     elif request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         selected_ulos_type = request.POST.get('jenisUlos')
         selected_color_codes_str = request.POST.get('selectedColors')
-        
         selected_motif_id = request.POST.get('selectedMotif') 
 
         selected_colors_codes = selected_color_codes_str.split(',') if selected_color_codes_str else []
@@ -553,7 +559,6 @@ def coloring_view(request):
             return JsonResponse({'error': 'Please select an Ulos motif.'}, status=400)
 
         base_image_filename = f"{selected_motif_id}.png"
-
         base_image_path = os.path.join(
             settings.BASE_DIR,
             'static',
@@ -567,7 +572,6 @@ def coloring_view(request):
             return JsonResponse({'error': f'Motif image not found for {selected_motif_id} at {base_image_path}. Please ensure the motif image exists on the server.'}, status=400)
 
         try:
-            # Capture both return values from main_coloring_process
             colored_image_url, used_color_codes_list = main_coloring_process( 
                 selected_ulos_type,
                 selected_colors_codes,
@@ -575,24 +579,23 @@ def coloring_view(request):
             )
 
             if colored_image_url:
-                # Prepare the used colors for display in the frontend
+                request.session['last_colored_image_path'] = colored_image_url
+                
                 used_colors_display = []
                 for code in used_color_codes_list:
-                    # Find the corresponding hex color from your initial colors_for_template list
-                    # It's crucial that `colors_for_template` contains the hex for each code.
-                    hex_val = next((item['hex_color'] for item in colors_for_template if item['code'] == code), '#FFFFFF') 
+                    hex_val = next((item['hex_color'] for item in colors_for_template if str(item['code']) == str(code)), '#FFFFFF') 
                     used_colors_display.append({'code': code, 'hex_color': hex_val})
+                
+                request.session['last_used_colors_display'] = used_colors_display
 
                 return JsonResponse({
                     'colored_image_url': colored_image_url,
-                    'used_colors': used_colors_display, # This key must match what JS expects
+                    'used_colors': used_colors_display,
                 })
             else:
                 return JsonResponse({'error': 'Failed to generate colored image.'}, status=500)
         except Exception as e:
-            print(f"Error during coloring process: {e}")
             return JsonResponse({'error': f'An internal error occurred: {str(e)}'}, status=500)
-
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
@@ -610,6 +613,211 @@ def get_ulos_motifs(request):
                     motifs_data.append({'id': motif_id, 'src': motif_src})
     return JsonResponse(motifs_data, safe=False)
 
+@login_required(login_url='login')
+def generate_ulos_pdf(request):
+    colored_image_path = request.session.get('last_colored_image_path')
+    used_colors_display = request.session.get('last_used_colors_display', [])
+
+    if not colored_image_path:
+        return HttpResponse("No colored image found", status=400)
+
+    # Create full path to the image
+    full_image_path = os.path.join(settings.BASE_DIR, 'static', colored_image_path)
+    if not os.path.exists(full_image_path):
+        return HttpResponse("Colored image file not found", status=404)
+
+    try:
+        # Create a buffer for the PDF
+        buffer = BytesIO()
+
+        # Create the PDF object
+        p = canvas.Canvas(buffer, pagesize=letter)
+        width, height = letter
+
+        # Set up PDF metadata
+        p.setTitle("Hasil Pewarnaan Motif Ulos")
+        p.setAuthor("Aplikasi Pewarnaan Ulos")
+
+        # Load the image using PIL for cropping
+        pil_img = Image.open(full_image_path)
+        img_width, img_height = pil_img.size
+
+        # --- Page 1: Cover page with full design image and grid ---
+        p.setFont("Helvetica-Bold", 16)
+        
+        p.drawString(50, height - 70, "Desain Utuh ")
+        
+        image_area_width = width / 2 - 50
+        image_area_height = height - 150
+
+        image_ratio = min(image_area_width / img_width, image_area_height / img_height)
+        scaled_img_width = img_width * image_ratio
+        scaled_img_height = img_height * image_ratio
+        
+        image_x = 50
+        image_y = (height - scaled_img_height) / 2 - 20
+        
+        p.drawImage(full_image_path, image_x, image_y, 
+                            width=scaled_img_width, height=scaled_img_height, 
+                            preserveAspectRatio=True)
+        
+
+        p.setFont("Helvetica-Bold", 14)
+        grid_title_x = width / 2 + 50
+        grid_title_y = height - 70
+        p.drawString(grid_title_x, grid_title_y, "URUTAN MENEMPEL")
+
+        grid_start_x = grid_title_x
+        grid_start_y = grid_title_y - 30
+        cell_size = 30
+        
+        p.setFont("Helvetica", 10)
+        for row_idx in range(4):
+            for col_idx in range(4):
+                x = grid_start_x + col_idx * cell_size
+                y = grid_start_y - row_idx * cell_size - cell_size
+                cell_label = f"{chr(65+col_idx)}{row_idx+1}" 
+                
+                p.rect(x, y, cell_size, cell_size)
+                text_width = p.stringWidth(cell_label, "Helvetica", 10)
+                p.drawString(x + (cell_size - text_width) / 2, y + cell_size/2 - 3, cell_label)
+
+        if used_colors_display:
+            p.setFont("Helvetica-Bold", 12)
+            colors_title_x = grid_title_x
+            colors_title_y = grid_start_y - 4 * cell_size - 40
+            p.drawString(colors_title_x, colors_title_y, "Warna yang Digunakan:")
+
+            color_item_y = colors_title_y - 20
+            color_box_size = 15
+            text_offset = 5
+
+            p.setFont("Helvetica", 10)
+            for color_info in used_colors_display:
+                if color_info and 'hex_color' in color_info and 'code' in color_info:
+                    hex_color = color_info['hex_color']
+                    code = color_info['code']
+
+                    try:
+                        r_hex = int(hex_color[1:3], 16) / 255.0
+                        g_hex = int(hex_color[3:5], 16) / 255.0
+                        b_hex = int(hex_color[5:7], 16) / 255.0
+                        p.setFillColorRGB(r_hex, g_hex, b_hex)
+                        p.rect(colors_title_x, color_item_y, color_box_size, color_box_size, fill=1)
+                        p.setStrokeColorRGB(0,0,0)
+                        p.rect(colors_title_x, color_item_y, color_box_size, color_box_size, fill=0, stroke=1)
+                    except ValueError:
+                        p.setFillColorRGB(0.5, 0.5, 0.5) # Gray
+                        p.rect(colors_title_x, color_item_y, color_box_size, color_box_size, fill=1)
+                        p.setStrokeColorRGB(0,0,0)
+                        p.rect(colors_title_x, color_item_y, color_box_size, color_box_size, fill=0, stroke=1)
+
+                    p.setFillColorRGB(0,0,0)
+                    p.drawString(colors_title_x + color_box_size + text_offset, color_item_y + 3, f"{code}")
+                    color_item_y -= 20
+
+        p.setFont("Helvetica", 10)
+        p.drawString(width / 2 - 30, 30, "Halaman 1 dari 19")
+        p.showPage()
+        
+
+## Desain Utuh - Bagian Atas
+        # --- Page 2: Cropped top half of the image ---
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, height - 50, "Desain Utuh - Bagian Atas ")
+
+        top_half_height = img_height // 2
+        cropped_top_img = pil_img.crop((0, 0, img_width, top_half_height))
+
+        max_width_page = width - 200
+        max_height_page = height - 200
+        ratio_page = min(max_width_page / cropped_top_img.width, max_height_page / cropped_top_img.height)
+        scaled_width_page = cropped_top_img.width * ratio_page
+        scaled_height_page = cropped_top_img.height * ratio_page
+
+        p.drawInlineImage(cropped_top_img, (width - scaled_width_page) / 2, (height - scaled_height_page) / 2 - 20, # Dipusatkan vertikal
+                                width=scaled_width_page, height=scaled_height_page)
+        
+        p.setFont("Helvetica", 10)
+        p.drawString(width / 2 - 30, 30, "Halaman 2 dari 19")
+        p.showPage()
+        
+
+## Desain Utuh - Bagian Bawah
+        # --- Page 3: Cropped bottom half of the image ---
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, height - 50, "Desain Utuh - Bagian Bawah ")
+        
+        bottom_half_height = img_height // 2
+        cropped_bottom_img = pil_img.crop((0, bottom_half_height, img_width, img_height))
+
+        scaled_width_page_bottom = cropped_bottom_img.width * ratio_page
+        scaled_height_page_bottom = cropped_bottom_img.height * ratio_page
+
+        p.drawInlineImage(cropped_bottom_img, (width - scaled_width_page_bottom) / 2, (height - scaled_height_page_bottom) / 2 - 20, # Dipusatkan vertikal
+                                width=scaled_width_page_bottom, height=scaled_height_page_bottom)
+        
+        p.setFont("Helvetica", 10)
+        p.drawString(width / 2 - 30, 30, "Halaman 3 dari 19")
+        p.showPage()
+
+        section_width = img_width // 4
+        section_height = img_height // 4
+        
+        page_counter = 4
+
+        section_labels = [
+            ["A1", "A2", "A3", "A4"],
+            ["B1", "B2", "B3", "B4"],
+            ["C1", "C2", "C3", "C4"],
+            ["D1", "D2", "D3", "D4"]
+        ]
+
+        for row_idx in range(4):
+            for col_idx in range(4):
+                section_label = section_labels[col_idx][row_idx] 
+
+                left = col_idx * section_width
+                upper = row_idx * section_height
+                right = left + section_width
+                lower = upper + section_height
+
+                cropped_img = pil_img.crop((left, upper, right, lower))
+
+                p.setFont("Helvetica-Bold", 16)
+                p.drawString(100, height - 50, section_label)
+
+                max_section_width = width - 200
+                max_section_height = height - 200
+                section_ratio = min(max_section_width / section_width, max_section_height / section_height)
+                scaled_section_width = section_width * section_ratio
+                scaled_section_height = section_height * section_ratio
+
+                p.drawInlineImage(cropped_img, (width - scaled_section_width) / 2,
+                                            (height - scaled_section_height) / 2 - 20,
+                                            width=scaled_section_width,
+                                            height=scaled_section_height)
+                
+                p.setFont("Helvetica", 10)
+                p.drawString(width / 2 - 30, 30, f"Halaman {page_counter} dari 19")
+                page_counter += 1
+
+                p.showPage()
+
+        p.save()
+
+        pdf = buffer.getvalue()
+        buffer.close()
+
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="hasil_pewarnaan_ulos.pdf"'
+
+        return response
+
+    except Exception as e:
+        print(f"Error generating PDF: {e}")
+        return HttpResponse(f"Error generating PDF: {e}", status=500)
+            
 def SignupPage(request):
     if request.user.is_authenticated:
          return redirect('home')

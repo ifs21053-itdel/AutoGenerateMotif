@@ -13,3 +13,4 @@ pymoo==0.6.1
 pymoode==0.3.0
 scikit-image
 openai
+reportlab
