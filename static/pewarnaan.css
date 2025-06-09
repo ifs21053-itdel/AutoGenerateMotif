@@ -204,18 +204,19 @@ body {
 
 /* Palette warna */
 .color-palette {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;        
+  justify-content: center;
+  gap: 8px;              
+  padding: 10px;
 }
 
 /* Row warna */
 .color-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  flex-wrap: wrap;               
+  justify-content: right;       
+  gap: 8px;                     
 }
 
 /* Wrapper untuk item warna */
@@ -382,18 +383,13 @@ select.form-control:focus {
     margin-right: auto;
 }
 
-#downloadImageBtn {
-  display: block;
-  padding: 18px 60px;
-  font-size: 1.3rem;
-  width: 100%;
-  max-width: 300px;
-  margin-top: 20px;
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 8px;
+#downloadImageBtn, #downloadPdfBtn {
+  padding: 12px 25px;           
+  font-size: 1rem;             
+  min-width: 180px;            
+  max-width: 200px;            
+  margin: 8px 5px;            
 }
-
 .image-section .app-title {
   color: white;
 }
@@ -497,6 +493,36 @@ select.form-control:focus {
   animation: spin 1s linear infinite;
   margin-left: 10px;
   vertical-align: middle;
+}
+
+/* Styling untuk loading bar */
+.loading-bar-container {
+  width: 200%;
+  max-width: 300px;
+  margin: 15px auto;
+  background-color: black;
+  border-radius: 3px;
+  padding: 3px;
+  position: relative;
+  display: none;
+}
+
+.loading-bar-progress {
+  height: 20px;
+  width: 0%;
+  background-color: #002ba3; /* Warna teal/cyan seperti pada gambar */
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.loading-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
 }
 
 @keyframes spin {
