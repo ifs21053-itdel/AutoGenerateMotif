@@ -68,7 +68,7 @@
                             <div class="mb-3 text-center">
                                 <label class="form-label mb-2">Pilih Warna Benang:</label>
                                 <div class="color-container">
-                                    <div class="color-palette">
+                                    <!-- <div class="color-palette">
                                         <div class="color-row">
                                             {% for color in ulos_colors %}
                                                 {% if forloop.counter0|divisibleby:10 and forloop.counter0 > 0 %}
@@ -83,7 +83,20 @@
                                                 </div>
                                             {% endfor %}
                                         </div>
+                                    </div> -->
+
+                                    <div class="color-palette">
+                                        {% for color in ulos_colors %}
+                                        <div class="color-item-wrapper"> 
+                                            <div class="color-label">{{ color.code }}</div>
+                                            <div class="color-box" 
+                                            data-code="{{ color.code }}"
+                                            style="background-color: {{ color.hex_color }};">
+                                         </div>
+                                        </div>
+                                        {% endfor %}
                                     </div>
+                                    
                                 </div>
                                 <div class="color-instruction-container">
                                     *Pilih minimal 2 warna benang<br>

@@ -255,15 +255,9 @@ $(document).ready(function() {
         coloredImage.hide();
         noImageMessage.show();
         downloadImageBtn.hide();
-        downloadPdfBtn.hide();
-        usedColorsDisplay.hide();
-        actualUsedColorsPalette.empty();
-        
-        // MODIFIKASI: Tampilkan LOADING SPINNER + LOADING BAR bersamaan
-        loadingSpinner.show(); // <<<< PERUBAHAN: Dari hide() menjadi show()
-        loadingBarContainer.show(); // Tampilkan loading bar
-        updateLoadingBar(0); // Mulai dari 0%
-        
+        usedColorsDisplay.hide(); // Hide the used colors display initially
+        actualUsedColorsPalette.empty(); // Clear previous used colors
+        loadingSpinner.show();
         submitButton.prop('disabled', true);
         // $('#downloadPdfBtn').show();
 
@@ -347,8 +341,8 @@ $(document).ready(function() {
                 downloadPdfBtn.show();
 
                 // Display the used colors
-                if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
-                    actualUsedColorsPalette.empty();
+           if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
+                    actualUsedColorsPalette.empty(); // Clear previous colors
                     data.used_colors.forEach(function(color) {
                         const colorItem = $('<div>')
                             .addClass('used-color-item')

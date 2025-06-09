@@ -204,18 +204,19 @@ body {
 
 /* Palette warna */
 .color-palette {
-  width: 100%;
   display: flex;
-  flex-direction: column;
-  gap: 10px;
+  flex-wrap: wrap;        
+  justify-content: center;
+  gap: 8px;              
+  padding: 10px;
 }
 
 /* Row warna */
 .color-row {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  width: 100%;
+  flex-wrap: wrap;               
+  justify-content: right;       
+  gap: 8px;                     
 }
 
 /* Wrapper untuk item warna */
@@ -382,18 +383,13 @@ select.form-control:focus {
     margin-right: auto;
 }
 
-#downloadImageBtn {
-  display: block;
-  padding: 18px 60px;
-  font-size: 1.3rem;
-  width: 100%;
-  max-width: 300px;
-  margin-top: 20px;
-  margin-left: auto;
-  margin-right: auto;
-  border-radius: 8px;
+#downloadImageBtn, #downloadPdfBtn {
+  padding: 12px 25px;           
+  font-size: 1rem;             
+  min-width: 180px;            
+  max-width: 200px;            
+  margin: 8px 5px;            
 }
-
 .image-section .app-title {
   color: white;
 }
