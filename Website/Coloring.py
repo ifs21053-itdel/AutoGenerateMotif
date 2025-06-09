@@ -22,6 +22,8 @@ from pymoo.util.nds.non_dominated_sorting import NonDominatedSorting
 from django.conf import settings
 import colorsys
 import importlib.util
+from django.core.cache import cache
+from pymoo.core.callback import Callback
 
 # Import Django models
 from Website.models import UlosColorThread, UlosCharacteristic
@@ -220,6 +222,40 @@ def save_colored_image(colored_image_rgb, ulos_type):
     relative_output_path = os.path.join('ColoringFile', 'output', output_filename).replace(os.sep, '/')
     return relative_output_path
 
+# Callback untuk melacak progres optimasi NSDE
+class ProgressCallback(Callback):
+    """
+    Callback untuk melacak progres optimasi NSDE dan menyimpannya ke cache Django.
+    """
+    def __init__(self, task_id, total_generations, start_progress=20, end_progress=90):
+        super().__init__()
+        self.task_id = task_id
+        self.total_generations = total_generations
+        self.start_progress = start_progress
+        self.end_progress = end_progress
+        self.progress_range = end_progress - start_progress
+
+    def notify(self, algorithm):
+        current_gen = algorithm.n_gen
+        if self.total_generations > 0:
+            progress_within_range = (current_gen / self.total_generations) * self.progress_range
+        else:
+            progress_within_range = self.progress_range
+            
+        total_progress = int(self.start_progress + progress_within_range)
+
+        status_message = f"Running optimization: Generation {current_gen}/{self.total_generations}"
+        
+        # --- TAMBAHKAN PRINT INI UNTUK MELIHAT PROGRES DI TERMINAL ---
+        print(f"CALLBACK: Task {self.task_id}, Gen {current_gen}, Progress: {total_progress}%")
+        # -------------------------------------------------------------
+
+        # Simpan kembali ke cache
+        cache.set(self.task_id, {
+            'progress': total_progress,
+            'status': status_message
+        }, timeout=3600)
+
 ## Objective Functions
 
 def calculate_michaelson_contrast(hsv_image):
@@ -342,19 +378,25 @@ class UlosColoringProblem(Problem):
 
 ## NSDE Optimization
 
-def run_nsde(problem):
+def run_nsde(problem, callback_instance):
     """Runs the NSDE (Non-dominated Sorting Differential Evolution) algorithm."""
     nsde = NSDE(pop_size=100,
-                 variant="DE/rand/1/bin",
-                 CR=0.7,
-                 F=0.85,
-                 de_repair="bounce-back",
-                 survival=RankAndCrowding(crowding_func="cd"))
+                variant="DE/rand/1/bin",
+                CR=0.7,
+                F=0.85,
+                de_repair="bounce-back",
+                survival=RankAndCrowding(crowding_func="cd"))
+    
+    # MODIFIKASI: ganti n_gen dengan konstanta dan tambahkan callback
+    total_generations = 3 # Definisikan total generasi di sini agar konsisten
+    termination = get_termination("n_gen", total_generations)
+
     result = minimize(problem,
                       nsde,
-                      ('n_gen', 1),
+                      termination, # MODIFIKASI
                       seed=42,
-                      verbose=True)
+                      verbose=True,
+                      callback=callback_instance) # TAMBAHAN: Gunakan callback
     return result
 
 def get_best_individual(result, unique_values, available_colors_list):
@@ -381,90 +423,115 @@ def get_best_individual(result, unique_values, available_colors_list):
     return best_individual, best_color_dict_converted, best_scores
 
 
-def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base_image_path):
+def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base_image_path, task_id):
+    """
+    Fungsi utama yang menjalankan seluruh proses pewarnaan dari awal hingga akhir.
+    Progresnya akan disimpan di cache Django menggunakan task_id.
+    """
+    # Fungsi helper untuk update progres di dalam fungsi ini
+    def update_progress(progress, status_message):
+        print(f"PROGRESS for {task_id}: {progress}% - {status_message}")
+        cache.set(task_id, {'progress': progress, 'status': status_message}, timeout=3600)
 
-    print("\n--- Starting main_coloring_process ---")
-    print(f"Input Ulos Type: {ulos_type_input}")
-    print(f"Input Selected Colors: {ulos_selected_color_codes_input}")
-    print(f"Input Base Image Path: {base_image_path}")
+    try:
+        update_progress(1, "Starting coloring process...")
+        print(f"\n--- Starting main_coloring_process for Task ID: {task_id} ---")
 
-    load_ulos_data_from_db()
+        update_progress(5, "Loading Ulos data from database...")
+        load_ulos_data_from_db()
 
-    ulos_type = ulos_type_input
-    ulos_colors_codes = ulos_selected_color_codes_input
-    n_colors = len(ulos_colors_codes)
-    
-    objective_function_code = create_custom_objective_function(ulos_type, api_key, ulos_colors_codes)
- 
-    custom_obj_dir = os.path.join(settings.BASE_DIR, 'static', 'ColoringFile')
-    os.makedirs(custom_obj_dir, exist_ok=True)
-    temp_objective_file_path = os.path.join(custom_obj_dir, "custom_objective_function.py")
-    
-    with open(temp_objective_file_path, "w") as file:
-        file.write(objective_function_code)
- 
-    spec = importlib.util.spec_from_file_location("custom_obj_func_module", temp_objective_file_path)
-    custom_obj_func_module = importlib.util.module_from_spec(spec)
-    sys.modules["custom_obj_func_module"] = custom_obj_func_module
-    spec.loader.exec_module(custom_obj_func_module)
-
-    calculate_user_color_preferences_func = custom_obj_func_module.calculate_user_color_preferences
-    print("DEBUG: Custom objective function generated and imported successfully.")
-
-    combined_available_colors = {}
-    recommended_colors_dict = user_color_threads(api_key, ulos_colors_codes)
-    combined_available_colors.update(recommended_colors_dict)
-    for code in ulos_colors_codes:
-        if code in DB_ULOS_THREAD_COLORS:
-            combined_available_colors[code] = DB_ULOS_THREAD_COLORS[code]
-        else:
-            print(f"WARNING: Color code '{code}' not found in DB_ULOS_THREAD_COLORS, skipping.")
-    print(f"DEBUG: Recommended Colors Dictionary: {recommended_colors_dict}")
-
-    gray_image, unique_values = get_unique_colors(base_image_path)
-    
-    if gray_image is None or unique_values is None:
-        print("ERROR: Could not load grayscale image or unique values. Aborting coloring process.")
-        return None, None 
-
-    problem = UlosColoringProblem(
-        unique_grayscale_values=unique_values,
-        base_image=gray_image,
-        n_colors=n_colors,
-        combined_available_colors=combined_available_colors,
-        user_preference_func=calculate_user_color_preferences_func
-        )
-    print("DEBUG: UlosColoringProblem defined successfully.")
-    print("DEBUG: Running NSDE optimization...")
-    result = run_nsde(problem)
-
-    best_individual, best_color_dict, best_scores = get_best_individual(
-        result, unique_values, problem.combined_available_colors_list
-    )
+        ulos_type = ulos_type_input
+        ulos_colors_codes = ulos_selected_color_codes_input
+        n_colors = len(ulos_colors_codes)
         
-    print(f"DEBUG: Best individual (color indices): {best_individual}")
-    print(f"DEBUG: Best scores (objectives): {best_scores}")
-    print(f"DEBUG: Final color mapping: {best_color_dict}")
-
+        update_progress(10, "Generating objective function via AI...")
+        objective_function_code = create_custom_objective_function(ulos_type, api_key, ulos_colors_codes)
     
-    colored_image_rgb = apply_coloring(gray_image, best_color_dict)
+        custom_obj_dir = os.path.join(settings.BASE_DIR, 'static', 'ColoringFile')
+        os.makedirs(custom_obj_dir, exist_ok=True)
+        temp_objective_file_path = os.path.join(custom_obj_dir, "custom_objective_function.py")
+        
+        with open(temp_objective_file_path, "w") as file:
+            file.write(objective_function_code)
+        
+        update_progress(15, "Importing custom objective function...")
+        spec = importlib.util.spec_from_file_location("custom_obj_func_module", temp_objective_file_path)
+        custom_obj_func_module = importlib.util.module_from_spec(spec)
+        sys.modules["custom_obj_func_module"] = custom_obj_func_module
+        spec.loader.exec_module(custom_obj_func_module)
+        calculate_user_color_preferences_func = custom_obj_func_module.calculate_user_color_preferences
 
-    hsv_to_code_map = {tuple(v): k for k, v in DB_ULOS_THREAD_COLORS.items()}
-    
-    used_color_codes = []
-    for hsv_value in best_color_dict.values():
-        hsv_tuple = tuple(hsv_value)
-        if hsv_tuple in hsv_to_code_map:
-            used_color_codes.append(hsv_to_code_map[hsv_tuple])
-        else:
-            print(f"WARNING: Generated HSV {hsv_value} not found in original DB colors.")
+        update_progress(20, "Fetching recommended colors...")
+        combined_available_colors = {}
+        recommended_colors_dict = user_color_threads(api_key, ulos_colors_codes)
+        combined_available_colors.update(recommended_colors_dict)
+        for code in ulos_colors_codes:
+            if code in DB_ULOS_THREAD_COLORS:
+                combined_available_colors[code] = DB_ULOS_THREAD_COLORS[code]
 
-    unique_used_color_codes = sorted(list(set(used_color_codes)))
-    print("HSV to Code Map:", hsv_to_code_map)
-    print("Used color codes:", used_color_codes)
+        gray_image, unique_values = get_unique_colors(base_image_path)
+        
+        if gray_image is None or unique_values is None:
+            raise ValueError("Could not load grayscale image or unique values. Aborting coloring process.")
 
-    relative_output_path = save_colored_image(colored_image_rgb, ulos_type)
-    return relative_output_path, unique_used_color_codes
+        problem = UlosColoringProblem(
+            unique_grayscale_values=unique_values,
+            base_image=gray_image,
+            n_colors=n_colors,
+            combined_available_colors=combined_available_colors,
+            user_preference_func=calculate_user_color_preferences_func
+        )
+        
+        # Buat instance callback dengan total generasi yang akan dijalankan
+        total_generations_for_nsde = 3 
+        progress_callback = ProgressCallback(
+            task_id=task_id, 
+            total_generations=total_generations_for_nsde
+            # Argumen 'cache' TIDAK PERLU dikirim lagi karena kita akan mengambilnya dari global scope
+        )
+
+        print("DEBUG: Running NSDE optimization...")
+        update_progress(25, "Running NSDE optimization...")
+        result = run_nsde(problem, progress_callback)
+        
+        update_progress(92, "Processing optimization results...")
+        best_individual, best_color_dict, best_scores = get_best_individual(
+            result, unique_values, list(combined_available_colors.values())
+        )
+        
+        update_progress(95, "Applying final colors to image...")
+        colored_image_rgb = apply_coloring(gray_image, best_color_dict)
+        
+        hsv_to_code_map = {tuple(v): k for k, v in DB_ULOS_THREAD_COLORS.items()}
+        used_color_codes = []
+        for hsv_value in best_color_dict.values():
+            hsv_tuple = tuple(hsv_value)
+            if hsv_tuple in hsv_to_code_map:
+                used_color_codes.append(hsv_to_code_map[hsv_tuple])
+        
+        unique_used_color_codes = sorted(list(set(used_color_codes)))
+
+        update_progress(98, "Saving final image...")
+        relative_output_path = save_colored_image(colored_image_rgb, ulos_type)
+        
+        final_result = {
+            'progress': 100,
+            'status': 'Completed',
+            'colored_image_url': relative_output_path,
+            'unique_used_color_codes': unique_used_color_codes
+        }
+        cache.set(task_id, final_result, timeout=3600)
+        print(f"--- Coloring process for {task_id} finished successfully! ---")
+        return
+
+    except Exception as e:
+        print(f"ERROR in main_coloring_process for task {task_id}: {e}")
+        error_result = {
+            'progress': 100,
+            'status': 'Error',
+            'error': str(e)
+        }
+        cache.set(task_id, error_result, timeout=3600)
 
 if __name__ == '__main__':
     pass

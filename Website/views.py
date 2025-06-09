@@ -32,7 +32,9 @@ from reportlab.lib.units import inch
 from reportlab.lib.utils import ImageReader
 from io import BytesIO
 from PIL import Image
-
+import uuid
+import threading
+from django.core.cache import cache
 
 @login_required(login_url='login')
 def image(request):
@@ -520,16 +522,13 @@ def coloring_view(request):
 
     colors_for_template = []
     for color_thread in ulos_colors_from_db:
-        h_str, s_str, v_str = color_thread.hsv.split(',')
-        h, s, v = float(h_str), float(s_str) / 100, float(v_str) / 100
-        r, g, b = colorsys.hsv_to_rgb(h / 360, s, v)
+        r, g, b = colorsys.hsv_to_rgb(float(color_thread.hsv.split(',')[0]) / 360, float(color_thread.hsv.split(',')[1]) / 100, float(color_thread.hsv.split(',')[2]) / 100)
         hex_color = '#%02x%02x%02x' % (int(r * 255), int(g * 255), int(b * 255))
         colors_for_template.append({
             'code': color_thread.CODE,
             'hex_color': hex_color,
             'hsv': color_thread.hsv,
         })
-
     ulos_colors_json_data_for_js = json.dumps(colors_for_template)
 
     if request.method == 'GET':
@@ -547,57 +546,72 @@ def coloring_view(request):
     elif request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         selected_ulos_type = request.POST.get('jenisUlos')
         selected_color_codes_str = request.POST.get('selectedColors')
-        selected_motif_id = request.POST.get('selectedMotif') 
+        selected_motif_id = request.POST.get('selectedMotif')
+        selected_colors_codes = [code for code in (selected_color_codes_str.split(',') if selected_color_codes_str else []) if code]
 
-        selected_colors_codes = selected_color_codes_str.split(',') if selected_color_codes_str else []
-        selected_colors_codes = [code for code in selected_colors_codes if code]
-
-        if not selected_ulos_type or len(selected_colors_codes) < 2:
-            return JsonResponse({'error': 'Please select Ulos type and at least 2 colors.'}, status=400)
-
-        if not selected_motif_id: 
-            return JsonResponse({'error': 'Please select an Ulos motif.'}, status=400)
-
-        base_image_filename = f"{selected_motif_id}.png"
+        if not selected_ulos_type or len(selected_colors_codes) < 2 or not selected_motif_id:
+            return JsonResponse({'error': 'Please select Ulos type, motif, and at least 2 colors.'}, status=400)
+        
         base_image_path = os.path.join(
-            settings.BASE_DIR,
-            'static',
-            'img',
-            'motifs',
-            selected_ulos_type, 
-            base_image_filename
+            settings.BASE_DIR, 'static', 'img', 'motifs', selected_ulos_type, f"{selected_motif_id}.png"
         )
-
         if not os.path.exists(base_image_path):
-            return JsonResponse({'error': f'Motif image not found for {selected_motif_id} at {base_image_path}. Please ensure the motif image exists on the server.'}, status=400)
+            return JsonResponse({'error': f'Motif image not found.'}, status=400)
 
-        try:
-            colored_image_url, used_color_codes_list = main_coloring_process( 
-                selected_ulos_type,
-                selected_colors_codes,
-                base_image_path
-            )
-
-            if colored_image_url:
-                request.session['last_colored_image_path'] = colored_image_url
-                
-                used_colors_display = []
-                for code in used_color_codes_list:
-                    hex_val = next((item['hex_color'] for item in colors_for_template if str(item['code']) == str(code)), '#FFFFFF') 
-                    used_colors_display.append({'code': code, 'hex_color': hex_val})
-                
-                request.session['last_used_colors_display'] = used_colors_display
-
-                return JsonResponse({
-                    'colored_image_url': colored_image_url,
-                    'used_colors': used_colors_display,
-                })
-            else:
-                return JsonResponse({'error': 'Failed to generate colored image.'}, status=500)
-        except Exception as e:
-            return JsonResponse({'error': f'An internal error occurred: {str(e)}'}, status=500)
+        task_id = str(uuid.uuid4())
+        cache.set(task_id, {'progress': 0, 'status': 'Initializing...'}, timeout=3600)
+        
+        thread = threading.Thread(target=main_coloring_process, args=(
+            selected_ulos_type,
+            selected_colors_codes,
+            base_image_path,
+            task_id
+        ))
+        thread.start()
+        
+        return JsonResponse({'task_id': task_id})
 
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+@login_required(login_url='login')
+def get_progress_view(request, task_id):
+    """
+    View yang di-poll oleh frontend untuk mendapatkan status progres dari sebuah task.
+    """
+    task_result = cache.get(task_id)
+
+    if task_result is None:
+        return JsonResponse({'error': 'Task not found or expired.', 'progress': 100, 'status': 'Error'}, status=404)
+
+    if task_result.get('status') == 'Completed':
+        used_colors_display = []
+        # Query semua warna sekali untuk efisiensi
+        all_colors = {str(c.CODE): c.get_hex_color() for c in UlosColorThread.objects.all()}
+        
+        for code in task_result.get('unique_used_color_codes', []):
+            hex_color = all_colors.get(str(code), '#FFFFFF') # Default ke putih jika tidak ditemukan
+            used_colors_display.append({'code': code, 'hex_color': hex_color})
+
+        request.session['last_colored_image_path'] = task_result['colored_image_url']
+        request.session['last_used_colors_display'] = used_colors_display
+
+        final_data = {
+            'progress': 100,
+            'status': 'Completed',
+            'colored_image_url': task_result['colored_image_url'],
+            'used_colors': used_colors_display,
+        }
+        return JsonResponse(final_data)
+
+    elif task_result.get('status') == 'Error':
+        return JsonResponse({
+            'progress': 100,
+            'status': 'Error',
+            'error': task_result.get('error', 'An unknown error occurred.')
+        })
+
+    # Jika masih berjalan, kembalikan progres saat ini
+    return JsonResponse(task_result)
 
 @login_required(login_url='login')
 def get_ulos_motifs(request):
