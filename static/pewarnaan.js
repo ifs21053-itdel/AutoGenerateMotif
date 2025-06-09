@@ -25,6 +25,26 @@ $(document).ready(function() {
     const usedColorsDisplay = $('#usedColorsDisplay');
     const actualUsedColorsPalette = $('#actualUsedColorsPalette');
 
+    // TAMBAHAN: Buat elemen loading bar dan tambahkan ke DOM setelah tombol submit
+    const loadingBarHTML = `
+        <div id="loadingBarContainer" class="loading-bar-container">
+            <div id="loadingBarProgress" class="loading-bar-progress"></div>
+            <div id="loadingBarText" class="loading-bar-text">0 %</div>
+        </div>
+    `;
+    $('#submitButton').after(loadingBarHTML);
+    
+    // TAMBAHAN: Buat referensi ke elemen loading bar
+    const loadingBarContainer = $('#loadingBarContainer');
+    const loadingBarProgress = $('#loadingBarProgress');
+    const loadingBarText = $('#loadingBarText');
+    
+    // TAMBAHAN: Fungsi untuk mengupdate progress bar
+    function updateLoadingBar(percent) {
+        loadingBarProgress.css('width', percent + '%');
+        loadingBarText.text(percent + ' %');
+    }
+
     const ulosColorsData = JSON.parse($('#ulosColorsJsonData').val() || '[]');
 
     $('.color-box').on('click', function() {
@@ -232,6 +252,7 @@ $(document).ready(function() {
         updateSelectedColorsDisplay();
     });
 
+    // ===== MODIFIKASI: Handler submit form untuk menampilkan LOADING SPINNER + LOADING BAR =====
     coloringForm.on('submit', async function(e) {
         e.preventDefault();
 
@@ -241,37 +262,58 @@ $(document).ready(function() {
         downloadImageBtn.hide();
         usedColorsDisplay.hide(); // Hide the used colors display initially
         actualUsedColorsPalette.empty(); // Clear previous used colors
-        loadingSpinner.show();
+        
+        // MODIFIKASI: Tampilkan LOADING SPINNER + LOADING BAR bersamaan
+        loadingSpinner.show(); // <<<< PERUBAHAN: Dari hide() menjadi show()
+        loadingBarContainer.show(); // Tampilkan loading bar
+        updateLoadingBar(0); // Mulai dari 0%
+        
         submitButton.prop('disabled', true);
 
         const jenisUlos = $('#jenisUlos').val();
         const selectedColors = selectedColorsInput.val();
         const motif = selectedMotifInput.val();
 
+        // PERBAIKAN: Fungsi untuk stop loading dengan benar
+        function stopLoading() {
+            loadingSpinner.hide();
+            loadingBarContainer.hide();
+            submitButton.prop('disabled', false);
+        }
+
         if (!jenisUlos) {
             errorMessage.text('Pilih jenis Ulos terlebih dahulu.');
-            loadingSpinner.hide();
-            submitButton.prop('disabled', false);
+            stopLoading(); // PERBAIKAN: Gunakan fungsi stopLoading()
             return;
         }
 
         if (!motif && motifCarouselContainer.is(':visible')) {
             errorMessage.text('Pilih motif Ulos terlebih dahulu.');
-            loadingSpinner.hide();
-            submitButton.prop('disabled', false);
+            stopLoading(); // PERBAIKAN: Gunakan fungsi stopLoading()
             return;
         }
 
         if (selectedColors.split(',').filter(Boolean).length < 2) {
             errorMessage.text('Pilih minimal 2 warna benang.');
-            loadingSpinner.hide();
-            submitButton.prop('disabled', false);
+            stopLoading(); // PERBAIKAN: Gunakan fungsi stopLoading()
             return;
         }
 
         const formData = new FormData(this);
+        let progressInterval; // PERBAIKAN: Deklarasi di scope yang tepat
 
         try {
+            // TAMBAHAN: Simulasi kemajuan loading
+            let progress = 0;
+            progressInterval = setInterval(() => {
+                // Increment progress secara bertahap hingga 90%
+                if (progress < 90) {
+                    progress += Math.floor(Math.random() * 5) + 1; // Increment 1-5% setiap kali
+                    progress = Math.min(progress, 90); // Pastikan tidak melebihi 90%
+                    updateLoadingBar(progress);
+                }
+            }, 200);
+
             const response = await fetch('/pewarnaan/', {
                 method: 'POST',
                 body: formData,
@@ -279,6 +321,18 @@ $(document).ready(function() {
                     'X-Requested-With': 'XMLHttpRequest',
                 }
             });
+
+            // PERBAIKAN: Hentikan interval simulasi di sini juga
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
+            
+            // TAMBAHAN: Set progress ke 100% saat data diterima
+            updateLoadingBar(100);
+            
+            // TAMBAHAN: Tunda sedikit untuk menampilkan 100% sebelum menyelesaikan
+            await new Promise(resolve => setTimeout(resolve, 500));
 
             if (!response.ok) {
                 const errorText = await response.text();
@@ -295,7 +349,7 @@ $(document).ready(function() {
                 downloadImageBtn.show();
 
                 // Display the used colors
-           if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
+                if (data.used_colors && Array.isArray(data.used_colors) && data.used_colors.length > 0) {
                     actualUsedColorsPalette.empty(); // Clear previous colors
                     data.used_colors.forEach(function(color) {
                         const colorItem = $('<div>')
@@ -324,11 +378,16 @@ $(document).ready(function() {
             }
 
         } catch (error) {
+            // PERBAIKAN: Pastikan interval dihentikan saat error
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
             errorMessage.text(`Gagal memproses pewarnaan. Coba lagi.`);
             console.error("Submission error:", error);
         } finally {
-            loadingSpinner.hide();
-            submitButton.prop('disabled', false);
+            // PERBAIKAN: Pastikan loading dihentikan di semua kondisi
+            stopLoading();
         }
     });
 });

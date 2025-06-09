@@ -499,6 +499,36 @@ select.form-control:focus {
   vertical-align: middle;
 }
 
+/* Styling untuk loading bar */
+.loading-bar-container {
+  width: 200%;
+  max-width: 300px;
+  margin: 15px auto;
+  background-color: black;
+  border-radius: 3px;
+  padding: 3px;
+  position: relative;
+  display: none;
+}
+
+.loading-bar-progress {
+  height: 20px;
+  width: 0%;
+  background-color: #002ba3; /* Warna teal/cyan seperti pada gambar */
+  border-radius: 2px;
+  transition: width 0.3s;
+}
+
+.loading-bar-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  font-size: 14px;
+  font-weight: bold;
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
