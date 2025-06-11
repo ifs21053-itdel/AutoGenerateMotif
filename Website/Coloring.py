@@ -260,7 +260,7 @@ def calculate_optimal_unique_colors(hsv_image, n_colors):
     """
     unique_hsv_combinations = np.unique(hsv_image.reshape(-1, hsv_image.shape[2]), axis=0)
     actual_unique_colors = len(unique_hsv_combinations)
-    if abs(actual_unique_colors - n_colors) <= 1:
+    if actual_unique_colors - n_colors <= 1:
         return 1.0
     else:
         difference = abs(actual_unique_colors - n_colors)
@@ -426,7 +426,7 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
     STAGE_SAVE_IMAGE = 98
     STAGE_COMPLETED = 100
 
-    TOTAL_NSDE_GENERATIONS = 3 
+    TOTAL_NSDE_GENERATIONS = 1
     current_nsde_generation = 0 
 
     def update_progress(progress):
@@ -535,7 +535,6 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
                 used_color_codes.append(hsv_to_code_map[hsv_tuple])
 
         unique_used_color_codes = sorted(list(set(used_color_codes)))
-        print("HSV to Code Map:", hsv_to_code_map)
         print("Used color codes:", unique_used_color_codes)
 
         update_progress(STAGE_SAVE_IMAGE)
