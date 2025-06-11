@@ -1,33 +1,35 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Preferensi pengguna dalam HSV (Hue 0-360, Saturation 0-100, Value 0-100)
-    user_preferences = np.array([[0, 0, 0], [140, 100, 60], [18, 75, 44]], dtype=np.int32)
+    # Extract unique HSV combinations
+    hsv_combinations = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
-    # Ekstrak kombinasi unik HSV dari gambar
-    unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
+    # Convert hue to 0-360 range
+    hue_converted = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
+    hsv_combinations_converted = np.column_stack((
+        hue_converted,
+        hsv_combinations[:, 1],
+        hsv_combinations[:, 2]
+    ))
     
-    # Konversi ke format yang sesuai (Hue 0-360, Saturation 0-100, Value 0-100)
-    # Perhatikan bahwa OpenCV HSV: H(0-179), S(0-255), V(0-255)
-    converted_colors = np.empty_like(unique_colors, dtype=np.int32)
-    converted_colors[:, 0] = (unique_colors[:, 0].astype(np.int32) * 2) % 360  # Hue to 0-360
-    converted_colors[:, 1] = np.round(unique_colors[:, 1].astype(np.float32) / 255 * 100).astype(np.int32)  # S to 0-100
-    converted_colors[:, 2] = np.round(unique_colors[:, 2].astype(np.float32) / 255 * 100).astype(np.int32)  # V to 0-100
+    # User preferences
+    user_preferences = np.array([[0, 0, 0], [51, 100, 85]])
     
-    # Hitung fitness berdasarkan kesesuaian dengan preferensi pengguna
-    fitness = 0.0
-    for pref in user_preferences:
-        min_dist = float('inf')
-        for color in converted_colors:
-            # Hitung jarak Euclidean dengan normalisasi komponen
-            hue_diff = min(abs(color[0] - pref[0]), 360 - abs(color[0] - pref[0])) / 180.0
-            sat_diff = abs(color[1] - pref[1]) / 100.0
-            val_diff = abs(color[2] - pref[2]) / 100.0
-            dist = np.sqrt(hue_diff**2 + sat_diff**2 + val_diff**2)
-            if dist < min_dist:
-                min_dist = dist
-        fitness += (1.0 - min_dist)
+    # Calculate fitness
+    min_distance = float('inf')
+    for user_color in user_preferences:
+        for img_color in hsv_combinations_converted:
+            # Calculate Euclidean distance in HSV space
+            distance = np.sqrt(
+                ((user_color[0] - img_color[0]) / 360.0)**2 +
+                ((user_color[1] - img_color[1]) / 255.0)**2 +
+                ((user_color[2] - img_color[2]) / 255.0)**2
+            )
+            if distance < min_distance:
+                min_distance = distance
     
-    # Normalisasi fitness
-    fitness /= len(user_preferences)
+    # Normalize fitness (1 - normalized distance)
+    max_possible_distance = np.sqrt(3)  # sqrt(1 + 1 + 1)
+    fitness = 1 - (min_distance / max_possible_distance)
+    
     return fitness
