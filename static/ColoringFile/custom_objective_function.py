@@ -1,35 +1,28 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Extract unique HSV combinations
-    hsv_combinations = np.unique(image_hsv.reshape(-1, 3), axis=0)
+    # Preferensi pengguna dalam HSV (H: 0-360, S: 0-100, V: 0-100)
+    user_preferences = np.array([[30, 20, 100], [51, 100, 85]], dtype=np.float32)
     
-    # Convert hue to 0-360 range
-    hue_converted = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
-    hsv_combinations_converted = np.column_stack((
-        hue_converted,
-        hsv_combinations[:, 1],
-        hsv_combinations[:, 2]
-    ))
+    # Ekstrak kombinasi unik HSV dari gambar
+    unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
-    # User preferences
-    user_preferences = np.array([[0, 0, 0], [51, 100, 85]])
+    # Konversi ke format yang sesuai (H: 0-360, S: 0-100, V: 0-100)
+    h = (unique_colors[:, 0].astype(np.int32) * 2).astype(np.float32)  # H: 0-359
+    s = (unique_colors[:, 1].astype(np.float32) / 255 * 100)  # S: 0-100
+    v = (unique_colors[:, 2].astype(np.float32) / 255 * 100)  # V: 0-100
     
-    # Calculate fitness
-    min_distance = float('inf')
-    for user_color in user_preferences:
-        for img_color in hsv_combinations_converted:
-            # Calculate Euclidean distance in HSV space
-            distance = np.sqrt(
-                ((user_color[0] - img_color[0]) / 360.0)**2 +
-                ((user_color[1] - img_color[1]) / 255.0)**2 +
-                ((user_color[2] - img_color[2]) / 255.0)**2
-            )
-            if distance < min_distance:
-                min_distance = distance
+    image_colors = np.column_stack((h, s, v))
     
-    # Normalize fitness (1 - normalized distance)
-    max_possible_distance = np.sqrt(3)  # sqrt(1 + 1 + 1)
-    fitness = 1 - (min_distance / max_possible_distance)
+    # Hitung perbedaan dengan preferensi pengguna
+    min_distances = []
+    for pref in user_preferences:
+        # Hitung jarak Euclidean untuk setiap warna di gambar terhadap preferensi
+        distances = np.sqrt(np.sum((image_colors - pref) ** 2, axis=1))
+        min_distances.append(np.min(distances))
+    
+    # Hitung fitness berdasarkan jarak minimum
+    avg_min_distance = np.mean(min_distances)
+    fitness = 1.0 / (1.0 + avg_min_distance)
     
     return fitness
