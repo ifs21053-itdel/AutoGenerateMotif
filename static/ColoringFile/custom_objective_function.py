@@ -1,15 +1,17 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Extract unique HSV combinations
-    hsv_combinations = np.unique(image_hsv.reshape(-1, 3), axis=0)
+    # Preferensi pengguna dalam HSV (H: 0-360, S: 0-100, V: 0-100)
+    user_preferences = np.array([[30, 20, 100], [51, 100, 85]], dtype=np.float32)
     
     # Convert hue to 0-360 range
     hsv_combinations_360 = hsv_combinations.copy()
     hsv_combinations_360[:, 0] = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
     
-    # User preferences
-    user_preferences = np.array([[0, 0, 0], [51, 100, 85]])
+    # Konversi ke format yang sesuai (H: 0-360, S: 0-100, V: 0-100)
+    h = (unique_colors[:, 0].astype(np.int32) * 2).astype(np.float32)  # H: 0-359
+    s = (unique_colors[:, 1].astype(np.float32) / 255 * 100)  # S: 0-100
+    v = (unique_colors[:, 2].astype(np.float32) / 255 * 100)  # V: 0-100
     
     # Calculate fitness
     min_distances = []
