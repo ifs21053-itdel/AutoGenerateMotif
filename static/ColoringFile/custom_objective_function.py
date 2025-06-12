@@ -5,31 +5,19 @@ def calculate_user_color_preferences(image_hsv):
     hsv_combinations = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
     # Convert hue to 0-360 range
-    hue_converted = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
-    hsv_combinations_converted = np.column_stack((
-        hue_converted,
-        hsv_combinations[:, 1],
-        hsv_combinations[:, 2]
-    ))
+    hsv_combinations_360 = hsv_combinations.copy()
+    hsv_combinations_360[:, 0] = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
     
     # User preferences
     user_preferences = np.array([[0, 0, 0], [51, 100, 85]])
     
     # Calculate fitness
-    min_distance = float('inf')
-    for user_color in user_preferences:
-        for img_color in hsv_combinations_converted:
-            # Calculate Euclidean distance in HSV space
-            distance = np.sqrt(
-                ((user_color[0] - img_color[0]) / 360.0)**2 +
-                ((user_color[1] - img_color[1]) / 255.0)**2 +
-                ((user_color[2] - img_color[2]) / 255.0)**2
-            )
-            if distance < min_distance:
-                min_distance = distance
+    min_distances = []
+    for pref in user_preferences:
+        distances = np.sqrt(np.sum((hsv_combinations_360 - pref)**2, axis=1))
+        min_distances.append(np.min(distances))
     
-    # Normalize fitness (1 - normalized distance)
-    max_possible_distance = np.sqrt(3)  # sqrt(1 + 1 + 1)
-    fitness = 1 - (min_distance / max_possible_distance)
+    max_possible_distance = np.sqrt(360**2 + 255**2 + 255**2)
+    fitness = 1 - np.mean(min_distances) / max_possible_distance
     
     return fitness

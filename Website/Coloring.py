@@ -158,19 +158,14 @@ def user_color_threads(api_key, ulos_selected_color_codes):
 ## Utils
 
 def get_unique_colors(image_path):
-    """
-    Loads a grayscale image and finds its unique pixel values.
-    """
-    image = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
-    
-    if image is None:
+    """Loads a grayscale image and finds its unique pixel values."""
+    gray_im = cv2.imread(image_path, cv2.IMREAD_GRAYSCALE)
+    if gray_im is None:
         return None, None
-
-    unique_values = np.unique(image).tolist()
-    return image, unique_values
+    unique_values = np.unique(gray_im).tolist()
+    return gray_im, unique_values
 
 def apply_coloring(gray_image, color_dict):
-
     color_image = np.zeros((gray_image.shape[0], gray_image.shape[1], 3), dtype=np.uint8)
 
     for gray_value, hsv in color_dict.items():
@@ -271,8 +266,8 @@ def calculate_optimal_unique_colors(hsv_image, n_colors):
 
 class UlosColoringProblem(Problem):
     """Class of problems for Ulos coloring optimization."""
-    def __init__(self, unique_grayscale_values, base_image, n_colors, dict_ulos_thread_colors, user_preference_func):
-        total_unique_values = len(unique_grayscale_values)
+    def __init__(self, unique_values, gray_image, n_colors, dict_ulos_thread_colors, user_preference_func):
+        total_unique_values = len(unique_values)
 
         # define design variables with bounds
         super().__init__(n_var=total_unique_values,
@@ -283,10 +278,10 @@ class UlosColoringProblem(Problem):
                                      * total_unique_values))
 
         # Simpan parameter yang dibutuhkan untuk evaluasi
-        self.unique_values = unique_grayscale_values
-        self.gray_image = base_image
+        self.unique_values = unique_values
+        self.gray_image = gray_image
         self.total_unique_values = total_unique_values
-        self.dict_ulos_thread_colors = list(dict_ulos_thread_colors.values()) # Store as a list for easy indexing
+        self.dict_ulos_thread_colors = list(dict_ulos_thread_colors.values())
         self.calculate_user_color_preferences = user_preference_func
 
 
@@ -365,7 +360,6 @@ class NSDEProgressReporter(Callback):
 
 ## NSDE Optimization
 
-# Modifikasi fungsi run_nsde untuk menerima callback
 def run_nsde(problem, termination, callback_instance):
     """Runs the NSDE (Non-dominated Sorting Differential Evolution) algorithm."""
     nsde = NSDE(pop_size=100,
@@ -495,8 +489,8 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
             return None, None 
 
         problem = UlosColoringProblem(
-            unique_grayscale_values=unique_values,
-            base_image=gray_image,
+            unique_values=unique_values,
+            gray_image=gray_image,
             n_colors=n_colors,
             dict_ulos_thread_colors=dict_ulos_thread_colors,
             user_preference_func=calculate_user_color_preferences_func
