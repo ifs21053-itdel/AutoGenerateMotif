@@ -2,6 +2,11 @@ $(document).ready(function () {
   let selectedColorCodes = [];
   let selectedMotif = "";
 
+  // ===== COLOR SCHEME ANALYZER VARIABLES =====
+  let colorAnalysisVisible = false;
+  let currentAnalysisData = null;
+  let currentTaskId = null;
+
   const selectedColorsContainer = $("#selectedColorsContainer");
   const colorCounter = $("#colorCounter");
   const selectedColorsInput = $("#selectedColorsInput");
@@ -20,6 +25,23 @@ $(document).ready(function () {
 
   const usedColorsDisplay = $("#usedColorsDisplay");
   const actualUsedColorsPalette = $("#actualUsedColorsPalette");
+
+  // ===== TAMBAHAN: ELEMEN UNTUK COLOR SCHEME RESULT =====
+  const colorSchemeResult = $("#colorSchemeResult");
+  const schemeRecommendation = $("#schemeRecommendation");
+
+  // ===== COLOR SCHEME ANALYZER ELEMENTS =====
+  const colorAnalysisSection = $("#colorAnalysisSection");
+  const analysisContent = $("#analysisContent");
+  const analysisPreview = $("#analysisPreview");
+  const previewSchemeBtn = $("#previewSchemeBtn");
+  const findSimilarBtn = $("#findSimilarBtn");
+  const progressSection = $("#progressSection");
+  const progressFill = $("#progressFill");
+  const progressText = $("#progressText");
+  const progressPercentage = $("#progressPercentage");
+  const finalColorAnalysis = $("#finalColorAnalysis");
+  const exportAnalysisBtn = $("#exportAnalysisBtn");
 
   // TAMBAHAN: Buat elemen loading bar dan tambahkan ke DOM setelah tombol submit
   const loadingBarHTML = `
@@ -41,6 +63,368 @@ $(document).ready(function () {
     loadingBarText.text(percent + " %");
   }
 
+  // ===== COLOR SCHEME ANALYZER FUNCTIONS =====
+  function updateColorAnalysisProgress(percent) {
+    if (progressFill.length) {
+      progressFill.css("width", percent + "%");
+    }
+    if (progressPercentage.length) {
+      progressPercentage.text(percent + "%");
+    }
+    
+    // Update progress text berdasarkan percentage
+    if (progressText.length) {
+      let text = "Memproses...";
+      if (percent < 5) text = "Menginisialisasi...";
+      else if (percent < 15) text = "Memuat data Ulos...";
+      else if (percent < 25) text = "Membuat fungsi objektif AI...";
+      else if (percent < 90) text = "Menjalankan optimisasi algoritma...";
+      else if (percent < 95) text = "Menganalisis skema warna...";
+      else if (percent < 100) text = "Menyelesaikan hasil...";
+      else text = "Selesai!";
+      
+      progressText.text(text);
+    }
+  }
+
+  function toggleColorAnalysis() {
+    colorAnalysisVisible = !colorAnalysisVisible;
+    
+    if (colorAnalysisVisible) {
+      analysisContent.slideDown(300);
+      $("#toggleAnalysisText").text("Sembunyikan Analisis");
+      $("#toggleAnalysisBtn").removeClass("btn-outline-primary").addClass("btn-primary");
+      
+      // Auto preview jika ada warna yang dipilih
+      if (selectedColorCodes.length >= 2) {
+        previewColorScheme();
+      }
+    } else {
+      analysisContent.slideUp(300);
+      $("#toggleAnalysisText").text("Tampilkan Analisis");
+      $("#toggleAnalysisBtn").removeClass("btn-primary").addClass("btn-outline-primary");
+    }
+  }
+
+  /**
+   * Update status tombol analisis berdasarkan jumlah warna yang dipilih
+   */
+  function updateAnalysisControls(enabled) {
+    if (previewSchemeBtn.length) {
+      previewSchemeBtn.prop("disabled", !enabled);
+    }
+    if (findSimilarBtn.length) {
+      findSimilarBtn.prop("disabled", selectedColorCodes.length === 0);
+    }
+  }
+
+  /**
+   * Preview color scheme analysis
+   */
+  async function previewColorScheme() {
+    if (selectedColorCodes.length < 2) {
+      showAnalysisMessage("Pilih minimal 2 warna untuk analisis", "warning");
+      return;
+    }
+
+    try {
+      showAnalysisLoading(true);
+      
+      const response = await fetch('/api/color-scheme-preview/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+          color_codes: selectedColorCodes
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        currentAnalysisData = data;
+        displayAnalysisResult(data);
+      } else {
+        showAnalysisMessage("Error: " + (data.error || "Gagal menganalisis skema warna"), "error");
+      }
+    } catch (error) {
+      console.error("Error previewing color scheme:", error);
+      showAnalysisMessage("Gagal terhubung ke server untuk analisis", "error");
+    } finally {
+      showAnalysisLoading(false);
+    }
+  }
+
+  /**
+   * Find similar colors
+   */
+  async function findSimilarColors() {
+    if (selectedColorCodes.length === 0) {
+      showAnalysisMessage("Pilih minimal 1 warna sebagai warna utama", "warning");
+      return;
+    }
+
+    try {
+      showAnalysisLoading(true);
+      
+      const primaryColor = selectedColorCodes[0];
+      const response = await fetch('/api/similar-colors/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken()
+        },
+        body: JSON.stringify({
+          primary_color: primaryColor,
+          count: 5
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Auto-select similar colors
+        data.similar_colors.forEach(colorCode => {
+          if (!selectedColorCodes.includes(colorCode)) {
+            // Simulasi klik pada color box
+            const colorBox = $(`.color-box[data-code="${colorCode}"]`);
+            if (colorBox.length) {
+              colorBox.click();
+            }
+          }
+        });
+        
+        showAnalysisMessage(`Ditemukan ${data.similar_colors.length} warna serupa dan ditambahkan ke pilihan`, "success");
+        
+        // Auto preview setelah menambah warna
+        setTimeout(() => {
+          if (selectedColorCodes.length >= 2) {
+            previewColorScheme();
+          }
+        }, 500);
+      } else {
+        showAnalysisMessage("Error: " + (data.error || "Gagal mencari warna serupa"), "error");
+      }
+    } catch (error) {
+      console.error("Error finding similar colors:", error);
+      showAnalysisMessage("Gagal terhubung ke server untuk mencari warna serupa", "error");
+    } finally {
+      showAnalysisLoading(false);
+    }
+  }
+
+  /**
+   * Display analysis result
+   */
+  function displayAnalysisResult(data) {
+    if (!analysisPreview.length) return;
+
+    const harmonyScore = Math.round((data.harmony_score || 0) * 100);
+    let scoreClass = "low";
+    if (harmonyScore > 80) scoreClass = "high";
+    else if (harmonyScore > 60) scoreClass = "medium";
+
+    const analysisHTML = `
+      <div class="analysis-result fade-in">
+        <div class="scheme-type-badge">${data.scheme_type || 'Unknown'}</div>
+        <div class="scheme-description-text">${data.description || 'Tidak ada deskripsi'}</div>
+        <div class="harmony-display">
+          <div class="harmony-circle ${scoreClass}">
+            <span class="score-value">${harmonyScore}%</span>
+          </div>
+          <div class="harmony-info">
+            <div class="harmony-label">Skor Harmoni</div>
+            <div class="harmony-level">${data.recommendations?.harmony_level || 'Medium'}</div>
+          </div>
+        </div>
+        ${data.recommendations ? `
+          <div style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
+            <strong>💡 Rekomendasi:</strong><br>
+            <small><strong>Cocok untuk:</strong> ${data.recommendations.best_for || '-'}</small><br>
+            <small><strong>Aplikasi Ulos:</strong> ${data.recommendations.ulos_application || '-'}</small>
+          </div>
+        ` : ''}
+      </div>
+    `;
+
+    analysisPreview.html(analysisHTML);
+  }
+
+  /**
+   * Show analysis loading state
+   */
+  function showAnalysisLoading(show) {
+    if (show) {
+      analysisPreview.addClass("loading-analysis");
+      previewSchemeBtn.prop("disabled", true);
+      findSimilarBtn.prop("disabled", true);
+    } else {
+      analysisPreview.removeClass("loading-analysis");
+      updateAnalysisControls(selectedColorCodes.length >= 2);
+    }
+  }
+
+  /**
+   * Show analysis message
+   */
+  function showAnalysisMessage(message, type = "info") {
+    const typeClass = type === "success" ? "analysis-success" : 
+                     type === "warning" ? "analysis-warning" : 
+                     type === "error" ? "analysis-error" : "analysis-info";
+    
+    const messageHTML = `
+      <div class="analysis-result ${typeClass} fade-in">
+        <div style="padding: 15px; text-align: center;">
+          <strong>${message}</strong>
+        </div>
+      </div>
+    `;
+    
+    analysisPreview.html(messageHTML);
+    
+    // Auto hide success/warning messages after 3 seconds
+    if (type === "success" || type === "warning") {
+      setTimeout(() => {
+        if (currentAnalysisData) {
+          displayAnalysisResult(currentAnalysisData);
+        }
+      }, 3000);
+    }
+  }
+
+  /**
+   * Display final analysis results
+   */
+  function displayFinalAnalysis(data) {
+    if (!finalColorAnalysis.length) return;
+
+    const analysis = data.color_scheme_analysis || {};
+    const recommendations = data.usage_recommendations || {};
+    const scores = data.optimization_scores || {};
+
+    // Update scheme type
+    $("#finalSchemeType").text(analysis.scheme_type || 'Unknown');
+    $("#finalSchemeDescription").text(analysis.description || 'Tidak ada deskripsi');
+
+    // Update harmony score
+    const harmonyScore = Math.round((analysis.color_harmony_score || 0) * 100);
+    const scoreCircle = $("#finalHarmonyScore");
+    scoreCircle.find(".score-value").text(harmonyScore + "%");
+    
+    // Update score circle class
+    scoreCircle.removeClass("high medium low");
+    if (harmonyScore > 80) scoreCircle.addClass("high");
+    else if (harmonyScore > 60) scoreCircle.addClass("medium");
+    else scoreCircle.addClass("low");
+
+    // Update recommendations
+    $("#recBestFor").text(recommendations.best_for || '-');
+    $("#recUlosApp").text(recommendations.ulos_application || '-');
+    $("#recHarmonyLevel").text(recommendations.harmony_level || '-');
+
+    // Show final analysis
+    finalColorAnalysis.show().addClass("slide-up");
+    exportAnalysisBtn.show();
+  }
+
+  // =====  FUNGSI UNTUK MENAMPILKAN HASIL KOMBINASI WARNA =====
+  function displayColorSchemeResult(data) {
+    console.log("displayColorSchemeResult called with data:", data);
+    
+    if (!data.color_scheme_analysis) {
+      console.log("No color_scheme_analysis found in data");
+      return;
+    }
+    
+    const analysis = data.color_scheme_analysis;
+    console.log("Analysis object:", analysis);
+    
+    // PERBAIKAN: Gunakan scheme_type bukan best_for
+    const schemeType = analysis.scheme_type || 'Tidak diketahui';
+    console.log("Scheme type to display:", schemeType);
+    
+    schemeRecommendation.text(schemeType);
+    
+    // Tampilkan section hasil
+    colorSchemeResult.show();
+  }
+
+  /**
+   * Export color analysis
+   */
+  async function exportColorAnalysis() {
+    if (!currentTaskId || selectedColorCodes.length === 0) {
+      alert("Tidak ada data analisis untuk diekspor");
+      return;
+    }
+
+    try {
+      const url = `/api/export-analysis/?colors=${selectedColorCodes.join(',')}`;
+      window.open(url, '_blank');
+    } catch (error) {
+      console.error("Error exporting analysis:", error);
+      alert("Gagal mengekspor analisis");
+    }
+  }
+
+  /**
+   * Get CSRF token
+   */
+  function getCsrfToken() {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'csrftoken') {
+        return value;
+      }
+    }
+    return '';
+  }
+
+  /**
+   * Handle color selection changes for analysis
+   */
+  function onColorSelectionChanged() {
+    // Show/hide analysis section
+    if (selectedColorCodes.length >= 1) {
+      colorAnalysisSection.show().addClass("fade-in");
+      updateAnalysisControls(selectedColorCodes.length >= 2);
+    } else {
+      colorAnalysisSection.hide();
+      resetAnalysisDisplay();
+    }
+
+    // Auto-preview if analysis is visible and enough colors
+    if (colorAnalysisVisible && selectedColorCodes.length >= 2) {
+      setTimeout(previewColorScheme, 300);
+    }
+  }
+
+  /**
+   * Reset analysis display
+   */
+  function resetAnalysisDisplay() {
+    currentAnalysisData = null;
+    if (analysisPreview.length) {
+      analysisPreview.html(`
+        <div class="empty-state">
+          <p>Pilih minimal 2 warna untuk melihat analisis skema warna</p>
+        </div>
+      `);
+    }
+    updateAnalysisControls(false);
+  }
+
+  // ===== EXPOSE FUNCTIONS TO GLOBAL SCOPE =====
+  window.toggleColorAnalysis = toggleColorAnalysis;
+  window.previewColorScheme = previewColorScheme;
+  window.findSimilarColors = findSimilarColors;
+  window.exportColorAnalysis = exportColorAnalysis;
+
+  // ===== END COLOR SCHEME ANALYZER FUNCTIONS =====
+
   const ulosColorsData = JSON.parse($("#ulosColorsJsonData").val() || "[]");
 
   $(".color-box").on("click", function () {
@@ -55,6 +439,9 @@ $(document).ready(function () {
       $(this).addClass("selected");
     }
     updateSelectedColorsDisplay();
+    
+    // ===== TRIGGER COLOR ANALYSIS UPDATE =====
+    onColorSelectionChanged();
   });
 
   jenisUlosSelect.on("change", async function () {
@@ -224,6 +611,7 @@ $(document).ready(function () {
         const codeLabel = $("<div>").addClass("selected-color-name").text(code);
         const colorDiv = $("<div>")
           .addClass("selected-color-box")
+          .attr("data-code", code)
           .css("background-color", colorObj.hex_color);
         const removeBtn = $("<span>")
           .addClass("remove-color-btn")
@@ -246,6 +634,9 @@ $(document).ready(function () {
       $(`.color-box[data-code="${code}"]`).addClass("selected");
     });
     updateSelectedColorsDisplay();
+    
+    // ===== TRIGGER INITIAL COLOR ANALYSIS UPDATE =====
+    onColorSelectionChanged();
   }
 
   $(document).on("click", ".remove-color-btn", function () {
@@ -255,9 +646,12 @@ $(document).ready(function () {
     );
     $(`.color-box[data-code="${colorCodeToRemove}"]`).removeClass("selected");
     updateSelectedColorsDisplay();
+    
+    // ===== TRIGGER COLOR ANALYSIS UPDATE =====
+    onColorSelectionChanged();
   });
 
-  // ===== MODIFIKASI: Handler submit form untuk menampilkan LOADING SPINNER + LOADING BAR =====
+  // ===== MODIFIKASI: Handler submit form untuk menampilkan LOADING SPINNER + LOADING BAR + ANALISIS =====
   coloringForm.on("submit", async function (e) {
     e.preventDefault();
 
@@ -267,7 +661,10 @@ $(document).ready(function () {
     noImageMessage.show();
     downloadImageBtn.hide();
     downloadPdfBtn.hide();
+    exportAnalysisBtn.hide();
     usedColorsDisplay.hide();
+    finalColorAnalysis.hide();
+    colorSchemeResult.hide(); // ===== RESET COLOR SCHEME RESULT =====
     actualUsedColorsPalette.empty();
 
     // Validasi input di frontend
@@ -283,11 +680,14 @@ $(document).ready(function () {
     // Tampilkan UI loading
     loadingSpinner.show();
     loadingBarContainer.show();
+    progressSection.show(); // ===== TAMPILKAN PROGRESS SECTION BARU =====
     updateLoadingBar(0);
+    updateColorAnalysisProgress(0); // ===== UPDATE PROGRESS ANALYZER =====
     submitButton.prop("disabled", true);
 
     const formData = new FormData(this);
     let pollInterval;
+    currentTaskId = null;
 
     // Fungsi untuk menghentikan semua proses loading di UI
     function stopLoading() {
@@ -295,13 +695,17 @@ $(document).ready(function () {
       loadingSpinner.hide();
       setTimeout(() => {
         loadingBarContainer.hide();
+        progressSection.hide(); // ===== SEMBUNYIKAN PROGRESS SECTION =====
         updateLoadingBar(0); // Reset bar untuk proses selanjutnya
+        updateColorAnalysisProgress(0); // ===== RESET PROGRESS ANALYZER =====
       }, 1500); // Beri jeda 1.5 detik agar user bisa lihat 100%
       submitButton.prop("disabled", false);
     }
 
     // Fungsi untuk polling progres ke server
     function pollProgress(taskId) {
+      currentTaskId = taskId; // ===== SIMPAN TASK ID =====
+      
       pollInterval = setInterval(async () => {
         try {
           // Tanya ke server "bagaimana progres task ini?"
@@ -315,6 +719,7 @@ $(document).ready(function () {
 
           // Update loading bar sesuai data dari server
           updateLoadingBar(data.progress || 0);
+          updateColorAnalysisProgress(data.progress || 0); // ===== UPDATE PROGRESS ANALYZER =====
 
           // Cek jika proses sudah 100% (selesai atau error)
           if (data.progress >= 100) {
@@ -329,6 +734,15 @@ $(document).ready(function () {
               downloadImageBtn.show();
               downloadPdfBtn.show();
 
+              // ===== TAMPILKAN HASIL ANALISIS WARNA =====
+              if (data.color_scheme_analysis) {
+                displayFinalAnalysis(data);
+                
+                // ===== TAMBAHAN: TAMPILKAN HASIL KOMBINASI WARNA SEDERHANA =====
+                displayColorSchemeResult(data);
+              }
+
+              // Display used colors
               if (data.used_colors && data.used_colors.length > 0) {
                 actualUsedColorsPalette.empty();
                 data.used_colors.forEach(function (color) {
@@ -400,4 +814,9 @@ $(document).ready(function () {
       stopLoading();
     }
   });
+
+  // ===== INITIALIZE COLOR ANALYSIS ON PAGE LOAD =====
+  setTimeout(() => {
+    onColorSelectionChanged();
+  }, 500);
 });

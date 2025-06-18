@@ -1,25 +1,39 @@
 import numpy as np
 
-def calculate_user_color_preferences(image_hsv):
-    # Preferensi pengguna dalam HSV (H: 0-360, S: 0-100, V: 0-100)
-    user_preferences = np.array([[30, 20, 100], [51, 100, 85]], dtype=np.float32)
+def calculate_user_color_preferences(hsv_image):
+    # Predefined user preferences in HSV [Hue (0-360), Saturation (0-100), Value (0-100)]
+    user_preferences = np.array([
+        [268, 57, 61],
+        [50, 26, 100],
+        [140, 100, 60]
+    ], dtype=np.int32)
     
-    # Convert hue to 0-360 range
-    hsv_combinations_360 = hsv_combinations.copy()
-    hsv_combinations_360[:, 0] = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
+    # Convert image to HSV and get unique colors
+    hsv_image = hsv_image.astype(np.int32)
+    hue_img = hsv_image[..., 0] * 2  # Convert OpenCV Hue range (0-179) to (0-358)
+    sat_img = (hsv_image[..., 1] * 100) // 255  # Convert Saturation to (0-100)
+    val_img = (hsv_image[..., 2] * 100) // 255  # Convert Value to (0-100)
     
-    # Konversi ke format yang sesuai (H: 0-360, S: 0-100, V: 0-100)
-    h = (unique_colors[:, 0].astype(np.int32) * 2).astype(np.float32)  # H: 0-359
-    s = (unique_colors[:, 1].astype(np.float32) / 255 * 100)  # S: 0-100
-    v = (unique_colors[:, 2].astype(np.float32) / 255 * 100)  # V: 0-100
+    # Stack and get unique HSV combinations
+    hsv_combinations = np.column_stack((hue_img.flatten(), sat_img.flatten(), val_img.flatten()))
+    unique_hsv = np.unique(hsv_combinations, axis=0)
     
-    # Calculate fitness
-    min_distances = []
+    # Calculate fitness based on color matching
+    fitness = 0.0
     for pref in user_preferences:
-        distances = np.sqrt(np.sum((hsv_combinations_360 - pref)**2, axis=1))
-        min_distances.append(np.min(distances))
+        for color in unique_hsv:
+            # Calculate Euclidean distance in HSV space
+            hue_diff = min(abs(color[0] - pref[0]), 360 - abs(color[0] - pref[0])) / 360.0
+            sat_diff = abs(color[1] - pref[1]) / 100.0
+            val_diff = abs(color[2] - pref[2]) / 100.0
+            distance = np.sqrt(hue_diff**2 + sat_diff**2 + val_diff**2)
+            
+            # Contribution to fitness is inversely proportional to distance
+            if distance == 0:
+                fitness += 1.0
+            else:
+                fitness += 1.0 / (1.0 + distance)
     
-    max_possible_distance = np.sqrt(360**2 + 255**2 + 255**2)
-    fitness = 1 - np.mean(min_distances) / max_possible_distance
-    
+    # Normalize fitness by the number of user preferences
+    fitness /= len(user_preferences)
     return fitness

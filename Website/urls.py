@@ -13,6 +13,7 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from Website import views
 from django.contrib import admin
 from django.urls import path
@@ -22,15 +23,25 @@ from .views import generate_ulos_pdf
 from .views import get_progress_view
 
 urlpatterns = [
+    # =================== ADMIN & AUTHENTICATION ===================
     path('admin/', admin.site.urls,),
+    path('', views.LoginPage, name='login'),
+    path('logout/', views.LogoutPage, name='logout'),
+    path('register/', views.SignupPage, name='signup'),
+    
+    # =================== MAIN NAVIGATION ===================
     path('generator', views.image, name="generator"),
-    path('Monitoring', views.loading, name="Monitoring"),
     path('home/', views.generator, name="home"),
+    path('Monitoring', views.loading, name="Monitoring"),
+    
+    # =================== MOTIF GENERATION (EXISTING) ===================
     path('external', views.external),
     path('save', views.save),
     path('PostImage', views.PostImage),
     path('post', views.createpost),
     path('tes', views.tes),
+    
+    # =================== MOTIF LISTING & MANAGEMENT ===================
     path('list', views.show, name="list1"),
     path('list/<str:id>', views.motif, name="list"),
     path('list/Nama/<str:user>', views.tagName, name="tagUser"),
@@ -40,50 +51,18 @@ urlpatterns = [
     path('update/<int:id>', views.UpdateUser, name='update'),
     path('update/updaterecord/<int:id>', views.updaterecord, name='updaterecord'),
     path('list1', views.showTest),
+    path('search', views.Search, name="search"),
+    
+    # =================== HELP SECTION ===================
     path('help', views.help, name="help"),
     path('help/generator', views.help_generate, name="help-generator"),
     path('help/lidi', views.help_lidi, name="help-lidi"),
     path('help/search', views.help_search, name="help-search"),
     path('help/download', views.help_download, name="help-download"),
-    path('search', views.Search, name="search"),
-    path('', views.LoginPage, name='login'),
-    path('logout/', views.LogoutPage, name='logout'),
-    path('register/', views.SignupPage, name='signup'),
+    
+    # =================== COLORING SYSTEM ===================
     path('pewarnaan/', views.coloring_view, name='pewarnaan'),
     path('get_motifs/', views.get_ulos_motifs, name='get_ulos_motifs'),
-    path('generate-pdf/', generate_ulos_pdf, name='generate_pdf'),
     path('pewarnaan/progress/<str:task_id>/', get_progress_view, name='pewarnaan_progress'),
+    path('generate-pdf/', generate_ulos_pdf, name='generate_pdf'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-
-
-# urlpatterns = [
-#     path('generate-motif/admin/', admin.site.urls,),
-#     path('generate-motif/generator', views.image, name="generator"),
-#     path('generate-motif/Monitoring', views.loading, name="Monitoring"),
-#     path('generate-motif/home/', views.generator, name="home"),
-#     path('generate-motif/external', views.external),
-#     path('generate-motif/save', views.save),
-#     path('generate-motif/PostImage', views.PostImage),
-#     path('generate-motif/post', views.createpost),
-#     path('generate-motif/tes', views.tes),
-#     path('generate-motif/list', views.show, name="list1"),
-#     path('generate-motif/list/<str:id>', views.motif, name="list"),
-#     path('generate-motif/list/Nama/<str:user>', views.tagName, name="tagUser"),
-#     path('generate-motif/list/JumlahBaris/<str:jmlBaris>', views.tagJmlBaris, name="tagJmlBaris"),
-#     path('generate-motif/list/waktu/<str:time>', views.tagWaktu, name="tagTime"),
-#     path('generate-motif/delete/', views.deleteMotif, name="delete"),
-#     path('generate-motif/update/<int:id>', views.UpdateUser, name='update'),
-#     path('generate-motif/update/updaterecord/<int:id>', views.updaterecord, name='updaterecord'),
-#     path('generate-motif/list1', views.showTest),
-#     path('generate-motif/help', views.help, name="help"),
-#     path('generate-motif/help/generator', views.help_generate, name="help-generator"),
-#     path('generate-motif/help/lidi', views.help_lidi, name="help-lidi"),
-#     path('generate-motif/help/search', views.help_search, name="help-search"),
-#     path('generate-motif/help/download', views.help_download, name="help-download"),
-#     path('generate-motif/search', views.Search, name="search"),
-#     path('generate-motif/',views.LoginPage,name='login'),
-#     path('generate-motif/logout/',views.LogoutPage,name='logout'),
-#     path('generate-motif/sregister/',views.SignupPage,name='signup')
-# ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
