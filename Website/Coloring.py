@@ -1,17 +1,13 @@
 import subprocess
 import sys
 import os
-import tempfile
 import json
-import random
 import numpy as np
-from PIL import Image
 import cv2
 from pymoo.core.problem import Problem
 from pymoode.algorithms import NSDE
 from pymoode.survival import RankAndCrowding
 from skimage.color import hsv2rgb
-from itertools import combinations
 from openai import OpenAI
 import matplotlib.pyplot as plt
 from pymoo.operators.mutation.pm import PolynomialMutation
@@ -30,20 +26,6 @@ import math
 
 # Import Django models
 from Website.models import UlosColorThread, UlosCharacteristic
-
-def install(package):
-    """Installs a Python package if it's not already present."""
-    try:
-        __import__(package)
-    except ImportError:
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-
-install("pymoo")
-install("pymoode")
-install("scikit-image")
-install("openai")
-install("Pillow")
-install("opencv-python")
 
 # Load API key
 key_file_path = os.path.join(
