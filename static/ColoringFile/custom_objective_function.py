@@ -1,29 +1,31 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Preferensi pengguna dalam format HSV
-    user_preferences = np.array([[0, 0, 88], [268, 57, 61], [0, 77, 86]], dtype=np.int32)
-    
-    # Ekstrak kombinasi unik HSV dari gambar
+    # Extract unique HSV combinations
     unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
-    # Convert hue to 0-360 range
+    # Convert Hue to 0-360 range
     hue_converted = (unique_colors[:, 0].astype(np.int32) * 2) % 360
     unique_colors[:, 0] = hue_converted
     
-    # User preferences
-    user_preferences = np.array([[0, 0, 0], [335, 94, 69]])
+    # User preferences (Hue in 0-360 range, Saturation and Value in 0-100 range)
+    user_prefs = np.array([
+        [18, 75, 44],
+        [56, 100, 100]
+    ])
     
-    # Hitung jumlah warna yang sesuai dengan preferensi pengguna
-    matched = 0
-    for pref in user_preferences:
-        distances = np.sqrt(np.sum((unique_colors - pref) ** 2, axis=1))
-        current_min = np.min(distances)
-        if current_min < min_distance:
-            min_distance = current_min
+    # Normalize Saturation and Value to 0-255 range for comparison
+    user_prefs[:, 1] = (user_prefs[:, 1] / 100) * 255
+    user_prefs[:, 2] = (user_prefs[:, 2] / 100) * 255
     
-    # Normalize fitness (lower distance is better)
+    # Calculate color distances
+    min_distances = []
+    for user_color in user_prefs:
+        distances = np.sqrt(np.sum((unique_colors - user_color) ** 2, axis=1))
+        min_distances.append(np.min(distances))
+    
+    # Normalize distances to fitness value (0-1)
     max_possible_distance = np.sqrt(360**2 + 255**2 + 255**2)
-    fitness = 1 - (min_distance / max_possible_distance)
+    fitness = 1 - (np.mean(min_distances) / max_possible_distance)
     
-    return fitness
+    return max(0, fitness)  # Ensure fitness is not negative
