@@ -7,7 +7,6 @@ from django.contrib import messages
 from django.core.files.storage import FileSystemStorage
 from .models import MotifForm1
 from django.contrib.auth.models import User
-from .models import Post
 from django.contrib.sessions.models import Session
 from itertools import zip_longest
 from .CheckModule import Check
