@@ -395,7 +395,7 @@ def user_color_threads(api_key, ulos_selected_color_codes):
         messages=[
             {"role": "system", "content": "You are a Senior Programmer"},
             {"role": "user", "content": f"""
-            Anda akan menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna HSV yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
+            Anda menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna dalam format HSV (Hue, Saturation, Value) yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
             Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relavan dan sejenis dengan warna yang dipilih pengguna {user_selected_hsv}.
             Output harus berupa dictionary JSON dengan struktur sebagai berikut:
             - Key: kode warna asli atau kode warna yang relevan
