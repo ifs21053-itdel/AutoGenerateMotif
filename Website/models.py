@@ -151,3 +151,18 @@ class Post(models.Model):
 #     jenisGenerate = models.CharField(max_length=50)      # Jenis algoritma/generate yang digunakan
 #     jmlBaris = models.IntegerField()                     # Jumlah baris yang dihasilkan
 #     time = models.DateTimeField(auto_now_add=True)       # Waktu pembuatan motif
+
+class UlosMotifImage(models.Model):
+    id = models.CharField(primary_key=True, max_length=50)
+    ulos_type = models.CharField(max_length=50, db_index=True)
+    name = models.CharField(max_length=100)
+    image_data = models.BinaryField()
+    image_format = models.CharField(max_length=10)
+    
+    class Meta:
+        db_table = 'ulos_motif_image'
+        verbose_name = 'Ulos Motif Image'
+        verbose_name_plural = 'Ulos Motif Images'
+    
+    def __str__(self):
+        return f"{self.ulos_type} - {self.name}"

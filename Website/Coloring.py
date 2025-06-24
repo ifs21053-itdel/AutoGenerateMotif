@@ -395,20 +395,16 @@ def user_color_threads(api_key, ulos_selected_color_codes):
         messages=[
             {"role": "system", "content": "You are a Senior Programmer"},
             {"role": "user", "content": f"""
-            Saya memiliki daftar warna referensi dalam format HSV (Hue, Saturation, Value): {DB_ULOS_THREAD_COLORS}
-            Dan warna-warna yang dipilih user: {user_selected_hsv}
-
-            Berikan warna lain yang sangat relevan atau mendekati dengan warna {user_selected_hsv} dari daftar referensi warna di {DB_ULOS_THREAD_COLORS}.
-            Output harus berupa dictionary JSON dengan:
+            Anda akan menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna HSV yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
+            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relavan dan sejenis dengan warna yang dipilih pengguna {user_selected_hsv}.
+            Output harus berupa dictionary JSON dengan struktur sebagai berikut:
             - Key: kode warna asli atau kode warna yang relevan
             - Value: list berisi warna dipilih atau relevan
             - Kembalikan kode warna asli dan relevan
-
             Pastikan:
             1. Format kode dan value warna dikembalikan dalam daftar seperti pada {DB_ULOS_THREAD_COLORS}
             2. Satu kode hanya mengandung satu value, untuk warna similiar menggunaakan kode warna asli sebagai key.
             3. Output harus valid JSON
-
             berikan daftar warna saja, jangan tambahkan keterangan.
             """
             },
