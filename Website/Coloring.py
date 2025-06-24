@@ -625,7 +625,7 @@ class NSDEProgressReporter(Callback):
 
 def run_nsde(problem, termination, callback_instance):
     """Runs the NSDE (Non-dominated Sorting Differential Evolution) algorithm."""
-    nsde = NSDE(pop_size=100,
+    nsde = NSDE(pop_size=5,
                 variant="DE/rand/1/bin",
                 CR=0.7,
                 F=0.85,
