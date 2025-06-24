@@ -800,76 +800,21 @@ def generate_ulos_pdf(request):
         # Enhanced cover page with analysis
         p.setFont("Helvetica-Bold", 18)
         p.drawString(50, height - 50, "Hasil Pewarnaan Motif Ulos")
-        
-        # Color analysis section
-        if color_analysis:
-            p.setFont("Helvetica-Bold", 14)
-            p.drawString(50, height - 80, "Analisis Skema Warna")
-            
-            y_pos = height - 110
-            p.setFont("Helvetica", 12)
-            
-            analysis_info = [
-                f"Jenis Skema: {color_analysis.get('scheme_type', 'N/A')}",
-                f"Deskripsi: {color_analysis.get('description', 'N/A')}",
-                f"Skor Harmoni: {color_analysis.get('color_harmony_score', 0):.2f}",
-                f"Rentang Hue: {color_analysis.get('hue_range', 0):.1f}°"
-            ]
-            
-            for info in analysis_info:
-                p.drawString(50, y_pos, info)
-                y_pos -= 20
-
-        # Usage recommendations
-        if usage_recommendations:
-            y_pos -= 10
-            p.setFont("Helvetica-Bold", 12)
-            p.drawString(50, y_pos, "Rekomendasi Penggunaan:")
-            y_pos -= 20
-            
-            p.setFont("Helvetica", 10)
-            recommendations = [
-                f"Cocok untuk: {usage_recommendations.get('best_for', 'N/A')}",
-                f"Aplikasi Ulos: {usage_recommendations.get('ulos_application', 'N/A')}",
-                f"Level Harmoni: {usage_recommendations.get('harmony_level', 'N/A')}"
-            ]
-            
-            for rec in recommendations:
-                p.drawString(50, y_pos, rec)
-                y_pos -= 15
-
-        # Optimization scores
-        if optimization_scores:
-            y_pos -= 10
-            p.setFont("Helvetica-Bold", 12)
-            p.drawString(50, y_pos, "Skor Optimasi:")
-            y_pos -= 20
-            
-            p.setFont("Helvetica", 10)
-            scores = [
-                f"Kontras: {optimization_scores.get('michaelson_contrast', 0):.2f}",
-                f"Warna: {optimization_scores.get('colorfulness', 0):.2f}",
-                f"Preferensi: {optimization_scores.get('user_preference_match', 0):.2f}"
-            ]
-            
-            for score in scores:
-                p.drawString(50, y_pos, score)
-                y_pos -= 15
 
         # Main image
         image_area_width = width / 2 - 50
-        image_area_height = height - y_pos - 100
+        image_area_height = height - 150
 
         image_ratio = min(image_area_width / img_width, image_area_height / img_height)
         scaled_img_width = img_width * image_ratio
         scaled_img_height = img_height * image_ratio
         
         image_x = 50
-        image_y = y_pos - scaled_img_height - 20
+        image_y = (height - scaled_img_height) / 2 - 20
         
         p.drawImage(full_image_path, image_x, image_y, 
-                    width=scaled_img_width, height=scaled_img_height, 
-                    preserveAspectRatio=True)
+                            width=scaled_img_width, height=scaled_img_height, 
+                            preserveAspectRatio=True)
 
         # Grid section
         p.setFont("Helvetica-Bold", 14)
@@ -931,9 +876,88 @@ def generate_ulos_pdf(request):
         p.drawString(width / 2 - 30, 30, "Halaman 1 dari 19")
         p.showPage()
 
-        # Continue with existing PDF pages (top half, bottom half, grid sections)
-        # ... (rest of PDF generation code remains the same)
+        ## Desain Utuh - Bagian Atas
+        # --- Page 2: Cropped top half of the image ---
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, height - 50, "Desain Utuh - Bagian Atas ")
 
+        top_half_height = img_height // 2
+        cropped_top_img = pil_img.crop((0, 0, img_width, top_half_height))
+
+        max_width_page = width - 200
+        max_height_page = height - 200
+        ratio_page = min(max_width_page / cropped_top_img.width, max_height_page / cropped_top_img.height)
+        scaled_width_page = cropped_top_img.width * ratio_page
+        scaled_height_page = cropped_top_img.height * ratio_page
+
+        p.drawInlineImage(cropped_top_img, (width - scaled_width_page) / 2, (height - scaled_height_page) / 2 - 20, # Dipusatkan vertikal
+                                width=scaled_width_page, height=scaled_height_page)
+        
+        p.setFont("Helvetica", 10)
+        p.drawString(width / 2 - 30, 30, "Halaman 2 dari 19")
+        p.showPage()
+        
+
+## Desain Utuh - Bagian Bawah
+        # --- Page 3: Cropped bottom half of the image ---
+        p.setFont("Helvetica-Bold", 16)
+        p.drawString(100, height - 50, "Desain Utuh - Bagian Bawah ")
+        
+        bottom_half_height = img_height // 2
+        cropped_bottom_img = pil_img.crop((0, bottom_half_height, img_width, img_height))
+
+        scaled_width_page_bottom = cropped_bottom_img.width * ratio_page
+        scaled_height_page_bottom = cropped_bottom_img.height * ratio_page
+
+        p.drawInlineImage(cropped_bottom_img, (width - scaled_width_page_bottom) / 2, (height - scaled_height_page_bottom) / 2 - 20, # Dipusatkan vertikal
+                                width=scaled_width_page_bottom, height=scaled_height_page_bottom)
+        
+        p.setFont("Helvetica", 10)
+        p.drawString(width / 2 - 30, 30, "Halaman 3 dari 19")
+        p.showPage()
+
+        section_width = img_width // 4
+        section_height = img_height // 4
+        
+        page_counter = 4
+
+        section_labels = [
+            ["A1", "A2", "A3", "A4"],
+            ["B1", "B2", "B3", "B4"],
+            ["C1", "C2", "C3", "C4"],
+            ["D1", "D2", "D3", "D4"]
+        ]
+
+        for row_idx in range(4):
+            for col_idx in range(4):
+                section_label = section_labels[col_idx][row_idx] 
+
+                left = col_idx * section_width
+                upper = row_idx * section_height
+                right = left + section_width
+                lower = upper + section_height
+
+                cropped_img = pil_img.crop((left, upper, right, lower))
+
+                p.setFont("Helvetica-Bold", 16)
+                p.drawString(100, height - 50, section_label)
+
+                max_section_width = width - 200
+                max_section_height = height - 200
+                section_ratio = min(max_section_width / section_width, max_section_height / section_height)
+                scaled_section_width = section_width * section_ratio
+                scaled_section_height = section_height * section_ratio
+
+                p.drawInlineImage(cropped_img, (width - scaled_section_width) / 2,
+                                            (height - scaled_section_height) / 2 - 20,
+                                            width=scaled_section_width,
+                                            height=scaled_section_height)
+                
+                p.setFont("Helvetica", 10)
+                p.drawString(width / 2 - 30, 30, f"Halaman {page_counter} dari 19")
+                page_counter += 1
+
+                p.showPage()
         p.save()
 
         pdf = buffer.getvalue()
