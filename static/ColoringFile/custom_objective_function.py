@@ -5,27 +5,29 @@ def calculate_user_color_preferences(image_hsv):
     unique_colors = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
     # Convert Hue to 0-360 range
-    hue_converted = (unique_colors[:, 0].astype(np.int32) * 2) % 360
-    unique_colors[:, 0] = hue_converted
+    hue = unique_colors[:, 0].astype(np.int32) * 2  # Scale 0-179 to 0-358
+    saturation = unique_colors[:, 1]
+    value = unique_colors[:, 2]
     
-    # User preferences (Hue in 0-360 range, Saturation and Value in 0-100 range)
-    user_prefs = np.array([
+    # User preferences (Hue: 0-360, Saturation: 0-255, Value: 0-255)
+    user_preferences = np.array([
         [18, 75, 44],
-        [56, 100, 100]
+        [200, 35, 100],
+        [0, 0, 88]
     ])
     
-    # Normalize Saturation and Value to 0-255 range for comparison
-    user_prefs[:, 1] = (user_prefs[:, 1] / 100) * 255
-    user_prefs[:, 2] = (user_prefs[:, 2] / 100) * 255
-    
-    # Calculate color distances
+    # Calculate fitness based on color distance
     min_distances = []
-    for user_color in user_prefs:
-        distances = np.sqrt(np.sum((unique_colors - user_color) ** 2, axis=1))
+    for pref in user_preferences:
+        # Calculate Euclidean distance in HSV space
+        hue_diff = np.minimum(np.abs(hue - pref[0]), 360 - np.abs(hue - pref[0])) / 180.0
+        sat_diff = np.abs(saturation - pref[1]) / 255.0
+        val_diff = np.abs(value - pref[2]) / 255.0
+        
+        distances = np.sqrt(hue_diff**2 + sat_diff**2 + val_diff**2)
         min_distances.append(np.min(distances))
     
-    # Normalize distances to fitness value (0-1)
-    max_possible_distance = np.sqrt(360**2 + 255**2 + 255**2)
-    fitness = 1 - (np.mean(min_distances) / max_possible_distance)
+    avg_min_distance = np.mean(min_distances)
+    fitness = 1.0 / (1.0 + avg_min_distance)
     
-    return max(0, fitness)  # Ensure fitness is not negative
+    return fitness

@@ -203,8 +203,7 @@ class UlosColorSchemeAnalyzer:
                 "colors": color_codes,
                 "achromatic_count": len(achromatic_colors),
                 "chromatic_count": 0,
-                "hue_range": 0,
-                "color_harmony_score": 0.8  # Neutral harmony
+                "hue_range": 0
             }
         
         # Analyze chromatic colors only for pattern detection
@@ -215,8 +214,7 @@ class UlosColorSchemeAnalyzer:
                 "colors": color_codes,
                 "hue_range": 0,
                 "achromatic_count": len(achromatic_colors),
-                "chromatic_count": len(chromatic_colors),
-                "color_harmony_score": 0.9  # Very high harmony
+                "chromatic_count": len(chromatic_colors)
             }
         
         # Check for Triadic pattern (3 chromatic colors)
@@ -227,8 +225,7 @@ class UlosColorSchemeAnalyzer:
                 "colors": color_codes,
                 "hue_range": self._calculate_hue_range(chromatic_colors),
                 "achromatic_count": len(achromatic_colors),
-                "chromatic_count": len(chromatic_colors),
-                "color_harmony_score": 0.75  # Good harmony but challenging
+                "chromatic_count": len(chromatic_colors)
             }
         
         # Check for Tetradic pattern (4 chromatic colors)
@@ -239,8 +236,7 @@ class UlosColorSchemeAnalyzer:
                 "colors": color_codes,
                 "hue_range": self._calculate_hue_range(chromatic_colors),
                 "achromatic_count": len(achromatic_colors),
-                "chromatic_count": len(chromatic_colors),
-                "color_harmony_score": 0.65  # Challenging but dynamic
+                "chromatic_count": len(chromatic_colors)
             }
         
         # Calculate hue relationships for other patterns
@@ -257,20 +253,16 @@ class UlosColorSchemeAnalyzer:
         if max_hue_distance <= 30:
             scheme_type = ColorSchemeType.MONOCHROMATIC
             description = f"Very similar hues within {max_hue_distance:.1f}° range"
-            harmony_score = 0.9
         elif max_hue_distance <= 60:
             scheme_type = ColorSchemeType.ANALOGOUS
             description = f"Adjacent hues spanning {max_hue_distance:.1f}° on color wheel"
-            harmony_score = 0.8
         elif any(abs(d - 180) <= 30 for d in hue_ranges):
             scheme_type = ColorSchemeType.COMPLEMENTARY
             description = "Colors from opposite sides of color wheel"
-            harmony_score = 0.7
         else:
             # Default to Tetradic for complex multi-color schemes
             scheme_type = ColorSchemeType.TETRADIC
             description = f"Multiple colors with complex relationships"
-            harmony_score = max(0.3, 1.0 - (max_hue_distance - 120) / 240)
         
         return {
             "scheme_type": scheme_type,
@@ -279,8 +271,7 @@ class UlosColorSchemeAnalyzer:
             "hue_range": max_hue_distance,
             "avg_hue_distance": avg_hue_distance,
             "achromatic_count": len(achromatic_colors),
-            "chromatic_count": len(chromatic_colors),
-            "color_harmony_score": harmony_score
+            "chromatic_count": len(chromatic_colors)
         }
     
     def _calculate_hue_range(self, colors: List[Color]) -> float:
@@ -294,44 +285,38 @@ class UlosColorSchemeAnalyzer:
     def get_usage_recommendations(self, analysis: Dict) -> Dict:
         """Updated recommendations without best_for and ulos_application"""
         scheme_type = analysis["scheme_type"]
-        harmony_score = analysis.get("color_harmony_score", 0.5)
+    
         
         recommendations = {
             ColorSchemeType.MONOCHROMATIC: {
                 "primary_ratio": "60%",
                 "secondary_ratio": "30%",
-                "accent_ratio": "10%",
-                "harmony_level": "Very High" if harmony_score > 0.85 else "High"
+                "accent_ratio": "10%"
             },
             ColorSchemeType.ANALOGOUS: {
                 "primary_ratio": "50%",
                 "secondary_ratio": "30%",
-                "accent_ratio": "20%",
-                "harmony_level": "High" if harmony_score > 0.75 else "Medium"
+                "accent_ratio": "20%"
             },
             ColorSchemeType.COMPLEMENTARY: {
                 "primary_ratio": "70%",
                 "secondary_ratio": "30%",
                 "accent_ratio": "Use sparingly",
-                "harmony_level": "Medium" if harmony_score > 0.65 else "Challenging"
             },
             ColorSchemeType.TRIADIC: {
                 "primary_ratio": "50%",
                 "secondary_ratio": "30%",
                 "accent_ratio": "20%",
-                "harmony_level": "Good" if harmony_score > 0.7 else "Challenging"
             },
             ColorSchemeType.TETRADIC: {
                 "primary_ratio": "40%",
                 "secondary_ratio": "30%",
                 "accent_ratio": "30% (distributed)",
-                "harmony_level": "Dynamic" if harmony_score > 0.6 else "Complex"
             },
             ColorSchemeType.ACHROMATIC: {
                 "primary_ratio": "60%",
                 "secondary_ratio": "40%",
                 "accent_ratio": "Consider adding color",
-                "harmony_level": "Neutral"
             }
         }
         
@@ -800,7 +785,6 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
         usage_recommendations = ulos_color_analyzer.get_usage_recommendations(color_scheme_analysis)
         
         print(f"DEBUG: Color Scheme Analysis: {color_scheme_analysis['scheme_type'].value}")
-        print(f"DEBUG: Color Harmony Score: {color_scheme_analysis.get('color_harmony_score', 'N/A')}")
 
         update_progress(STAGE_APPLY_COLORS)
         colored_image_rgb = apply_coloring(gray_image, best_color_dict)
@@ -819,14 +803,12 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
                 'scheme_type': color_scheme_analysis['scheme_type'].value,
                 'description': color_scheme_analysis['description'],
                 'hue_range': color_scheme_analysis.get('hue_range', 0),
-                'color_harmony_score': color_scheme_analysis.get('color_harmony_score', 0),
                 'achromatic_count': color_scheme_analysis.get('achromatic_count', 0),
                 'chromatic_count': color_scheme_analysis.get('chromatic_count', 0)
             },
             'usage_recommendations': {
                 'best_for': usage_recommendations.get('best_for', ''),
                 'ulos_application': usage_recommendations.get('ulos_application', ''),
-                'harmony_level': usage_recommendations.get('harmony_level', ''),
                 'primary_ratio': usage_recommendations.get('primary_ratio', ''),
                 'secondary_ratio': usage_recommendations.get('secondary_ratio', ''),
                 'accent_ratio': usage_recommendations.get('accent_ratio', '')
@@ -871,7 +853,6 @@ def get_color_scheme_preview(color_codes_list: List[str]) -> Dict:
             'success': True,
             'scheme_type': analysis['scheme_type'].value,
             'description': analysis['description'],
-            'harmony_score': analysis.get('color_harmony_score', 0),
             'recommendations': recommendations,
             'color_details': {
                 code: {
