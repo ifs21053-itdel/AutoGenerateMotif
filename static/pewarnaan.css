@@ -386,11 +386,19 @@ select.form-control:focus {
 
 #downloadImageBtn,
 #downloadPdfBtn {
-  padding: 12px 25px;
-  font-size: 1rem;
-  min-width: 180px;
-  max-width: 200px;
-  margin: 8px 5px;
+  padding: 12px 25px !important;
+  font-size: 1rem !important;
+  font-weight: bold;
+  min-width: 180px !important;
+  max-width: 200px !important;
+  margin: 8px 5px !important;
+  background-color: white !important; 
+  color: #002ba3 !important; 
+  border: 2px solid #002ba3 !important; 
+  border-radius: 8px;
+  display: inline-block; 
+  white-space: nowrap; 
+  text-align: center; 
 }
 
 .image-section .app-title {
@@ -444,7 +452,7 @@ select.form-control:focus {
 .selected-color-box {
   width: 35px;
   height: 35px;
-  border-radius: 4px;
+  /* border-radius: 4px; */
   position: relative;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
   border: 1px solid #ccc;
@@ -594,12 +602,15 @@ select.form-control:focus {
 }
 
 .used-color-box {
+  width: 35px;
+  height: 35px;
   width: 40px;
   height: 40px;
-  border-radius: 50%;
+  border-radius: 4px;
   border: 2px solid #ccc;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   margin-bottom: 5px;
+  margin-right: 5px
 }
 
 .used-color-code {
@@ -795,11 +806,6 @@ select.form-control:focus {
 
   .used-color-item {
     width: 50px;
-  }
-
-  .used-color-box {
-    width: 35px;
-    height: 35px;
   }
 
   .used-color-code {
