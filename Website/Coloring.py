@@ -467,9 +467,10 @@ def calculate_michaelson_contrast(hsv_image):
     min_hue = np.min(hue_channel)
     max_hue = np.max(hue_channel)
 
-    # Hitung kontras Michelson berdasarkan rumus
-    contrast = (max_hue - min_hue) / (max_hue + min_hue)
-    return contrast
+    if (max_hue + min_hue) == 0:
+        return 0.0
+        
+    return (max_hue - min_hue) / (max_hue + min_hue)
 
 def calculate_rms_contrast(hsv_image):
     # Mengonversi gambar dari HSV ke BGR dalam

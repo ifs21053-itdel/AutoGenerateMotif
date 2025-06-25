@@ -777,7 +777,7 @@ $(document).ready(function () {
           );
           stopLoading();
         }
-      }, 2000); // Polling setiap 2 detik
+      }, 500);
     }
 
     // === Langkah Utama saat tombol disubmit ===
