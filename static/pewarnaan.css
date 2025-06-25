@@ -56,7 +56,7 @@ body {
 
 /* Perbaikan untuk Slick Carousel */
 .motif-carousel-wrapper {
-  max-width: 650px;
+  max-width: 800px;
   margin: 0 auto;
   border: 1px solid #ddd;
   border-radius: 8px;
@@ -78,7 +78,7 @@ body {
   outline: none;
   cursor: pointer;
   transition: transform 0.3s ease;
-  height: 220px; /* Tetapkan tinggi tetap */
+  height: 320px; /* Tetapkan tinggi tetap */
   display: flex !important;
   align-items: center;
   justify-content: center;
@@ -86,8 +86,8 @@ body {
 
 /* Perbaikan ukuran gambar */
 .motif-slide img {
-  max-width: 180px !important; /* Batasi lebar maksimum */
-  max-height: 200px !important; /* Batasi tinggi maksimum */
+  max-width: 280px !important; /* Batasi lebar maksimum */
+  max-height: 300px !important; /* Batasi tinggi maksimum */
   width: auto !important; /* Biarkan lebar menyesuaikan */
   height: auto !important; /* Biarkan tinggi menyesuaikan */
   object-fit: contain !important; /* Pastikan gambar tetap proporsional */
@@ -392,13 +392,13 @@ select.form-control:focus {
   min-width: 180px !important;
   max-width: 200px !important;
   margin: 8px 5px !important;
-  background-color: white !important; 
-  color: #002ba3 !important; 
-  border: 2px solid #002ba3 !important; 
+  background-color: white !important;
+  color: #002ba3 !important;
+  border: 2px solid #002ba3 !important;
   border-radius: 8px;
-  display: inline-block; 
-  white-space: nowrap; 
-  text-align: center; 
+  display: inline-block;
+  white-space: nowrap;
+  text-align: center;
 }
 
 .image-section .app-title {
@@ -450,8 +450,8 @@ select.form-control:focus {
 }
 
 .selected-color-box {
-  width: 35px;
-  height: 35px;
+  width: 50px;
+  height: 50px;
   /* border-radius: 4px; */
   position: relative;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
@@ -610,7 +610,7 @@ select.form-control:focus {
   border: 2px solid #ccc;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   margin-bottom: 5px;
-  margin-right: 5px
+  margin-right: 5px;
 }
 
 .used-color-code {
