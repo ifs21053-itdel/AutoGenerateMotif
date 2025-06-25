@@ -1,34 +1,32 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Predefined user preferences in HSV (H: 0-360, S: 0-100, V: 0-100)
-    user_preferences = np.array([[0, 0, 0], [1, 88, 80]], dtype=np.float32)
+    # Preferensi pengguna dalam HSV (H: 0-360, S: 0-100, V: 0-100)
+    user_preferences = np.array([[0, 0, 0], [0, 0, 100]], dtype=np.int32)
     
-    # Convert image HSV to match user preference format
-    hue_img = image_hsv[:, :, 0].astype(np.int32) * 2  # Convert H to 0-360
-    sat_img = (image_hsv[:, :, 1].astype(np.float32) / 255) * 100  # Convert S to 0-100
-    val_img = (image_hsv[:, :, 2].astype(np.float32) / 255) * 100  # Convert V to 0-100
+    # Konversi image_hsv ke int32 dan adjust hue ke 0-360
+    hsv_values = image_hsv.astype(np.int32)
+    hsv_values[..., 0] = (hsv_values[..., 0] * 2) % 360  # Konversi hue 0-179 ke 0-360
+    hsv_values[..., 1] = np.round(hsv_values[..., 1] * 100 / 255).astype(np.int32)  # Konversi saturation ke 0-100
+    hsv_values[..., 2] = np.round(hsv_values[..., 2] * 100 / 255).astype(np.int32)  # Konversi value ke 0-100
     
-    # Get unique HSV combinations
-    hsv_combinations = np.column_stack((hue_img.flatten(), sat_img.flatten(), val_img.flatten()))
-    unique_combinations = np.unique(hsv_combinations, axis=0)
+    # Ambil kombinasi unik HSV
+    unique_hsv = np.unique(hsv_values.reshape(-1, 3), axis=0)
     
-    # Calculate fitness based on similarity to user preferences
+    # Hitung fitness berdasarkan kesesuaian dengan preferensi pengguna
     fitness = 0.0
-    for combo in unique_combinations:
+    for pref in user_preferences:
         min_dist = float('inf')
-        for pref in user_preferences:
-            # Calculate distance in HSV space (weighted components)
-            h_diff = min(abs(combo[0] - pref[0]), 360 - abs(combo[0] - pref[0])) / 360.0
-            s_diff = abs(combo[1] - pref[1]) / 100.0
-            v_diff = abs(combo[2] - pref[2]) / 100.0
-            dist = np.sqrt(0.5 * h_diff**2 + 0.3 * s_diff**2 + 0.2 * v_diff**2)
+        for hsv in unique_hsv:
+            # Hitung jarak Euclidean dengan normalisasi komponen
+            hue_diff = min(abs(hsv[0] - pref[0]), 360 - abs(hsv[0] - pref[0])) / 180.0
+            sat_diff = abs(hsv[1] - pref[1]) / 100.0
+            val_diff = abs(hsv[2] - pref[2]) / 100.0
+            dist = np.sqrt(hue_diff**2 + sat_diff**2 + val_diff**2)
             if dist < min_dist:
                 min_dist = dist
         fitness += (1.0 - min_dist)
     
-    # Normalize fitness by number of unique combinations
-    if len(unique_combinations) > 0:
-        fitness /= len(unique_combinations)
-    
+    # Normalisasi fitness
+    fitness = fitness / len(user_preferences)
     return fitness

@@ -358,7 +358,7 @@ def create_custom_objective_function(ulos_type_name, api_key, ulos_selected_colo
             Dari citra tersebut, ekstrak semua kombinasi unik Hue, Saturation, Value.
             Jika daftar kombinasi Hue, Saturation, Value tersebut sama dengan kombinasi Hue, Saturation, Value preferensi pengguna, maka nilai fitness adalah satu (1). Nilai fitness akan berkurang sesuai dengan sejauh mana kesesuaian warna tersebut dengan preferensi yang diberikan, berdasarkan kriteria yang ditentukan.
             Pastikan nilai Hue pada rentang 0-360, konversi ke int32 secara eksplisit, dan pastikan hue_img adalah int sebelum modulo.
-            Hasilkan hanya kode program Python lengkap yang dapat langsung dieksekusi, tanpa teks penjelasan, tanpa tanda kutip balik (```), dan tanpa karakter atau teks tambahan apapun di awal atau akhir. Pastikan semua kurung dan tanda baca lainnya tertutup dengan benar."""
+            Hasilkan hanya kode program Python lengkap yang dapat langsung dieksekusi,tidak tanpa teks penjelasan, tanpa tanda kutip balik (```), tidak error dan tanpa karakter atau teks tambahan apapun di awal atau akhir. Pastikan semua kurung dan tanda baca lainnya tertutup dengan benar."""
             },
         ],
     )
@@ -379,11 +379,11 @@ def user_color_threads(api_key, ulos_selected_color_codes):
             {"role": "system", "content": "You are a Senior Programmer"},
             {"role": "user", "content": f"""
             Anda menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna dalam format HSV (Hue, Saturation, Value) yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
-            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relavan atau serupa dan sejenis dengan warna yang dipilih pengguna {user_selected_hsv}.
+            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relevan dan paling mirip secara visual dengan warna yang dipilih pengguna {user_selected_hsv}.
             Output harus berupa dictionary JSON dengan struktur sebagai berikut:
-            - Key: kode warna asli atau kode warna yang relevan
+            - Key: kode warna yang dipilih pengguna atau kode warna yang paling relevan
             - Value: list berisi warna dipilih atau relevan
-            - Kembalikan kode warna asli dan relevan
+            - Kembalikan kode warna yang dipilih pengguna dan yang relevan
             Pastikan:
             1. Format kode dan value warna dikembalikan dalam daftar seperti pada {DB_ULOS_THREAD_COLORS}
             2. Satu kode hanya mengandung satu value, untuk warna similiar menggunaakan kode warna asli sebagai key.
@@ -664,7 +664,7 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
     STAGE_SAVE_IMAGE = 98
     STAGE_COMPLETED = 100
 
-    TOTAL_NSDE_GENERATIONS = 1
+    TOTAL_NSDE_GENERATIONS = 2
     current_nsde_generation = 0 
 
     def update_progress(progress):
@@ -705,7 +705,7 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
         os.makedirs(custom_obj_dir, exist_ok=True)
         temp_objective_file_path = os.path.join(custom_obj_dir, "custom_objective_function.py")
         
-        with open(temp_objective_file_path, "w") as file:
+        with open(temp_objective_file_path, "w", encoding='utf-8') as file:
             file.write(objective_function_code)
         
         update_progress(STAGE_IMPORT_OBJ_FUNC)

@@ -129,21 +129,6 @@ DATABASES = {
 #     }
 # }
 
-CACHE_DIR = os.path.join(BASE_DIR, 'django_cache')
-if not os.path.exists(CACHE_DIR):
-    os.makedirs(CACHE_DIR)
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.filebased.FileBasedCache',
-        'LOCATION': CACHE_DIR,
-        'TIMEOUT': 3600, # Cache berlaku selama 1 jam (3600 detik)
-        'OPTIONS': {
-            'MAX_ENTRIES': 1000 # Jumlah maksimum entri cache
-        }
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
