@@ -345,7 +345,7 @@ def create_custom_objective_function(ulos_type_name, api_key, ulos_selected_colo
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "You are a Senior Programmer"},
+            {"role": "system", "content": "You are a Senior Programmer."},
             {"role": "user", "content": f"""Buatlah fungsi Python dengan nama calculate_user_color_preferences.
             Fungsi ini merupakan fungsi objektif pada algoritma NSDE (Non-dominated Sorting Differential Evolution) yang mengoptimalkan kombinasi warna pada motif Ulos dengan karakteristik berikut:
             - Garis: {line}
@@ -358,14 +358,12 @@ def create_custom_objective_function(ulos_type_name, api_key, ulos_selected_colo
             Dari citra tersebut, ekstrak semua kombinasi unik Hue, Saturation, Value.
             Jika daftar kombinasi Hue, Saturation, Value tersebut sama dengan kombinasi Hue, Saturation, Value preferensi pengguna, maka nilai fitness adalah satu (1). Nilai fitness akan berkurang sesuai dengan sejauh mana kesesuaian warna tersebut dengan preferensi yang diberikan, berdasarkan kriteria yang ditentukan.
             Pastikan nilai Hue pada rentang 0-360, konversi ke int32 secara eksplisit, dan pastikan hue_img adalah int sebelum modulo.
-            Hasilkan hanya kode program tanpa keterangan tambahan.
-            """
+            Hasilkan hanya kode program Python lengkap yang dapat langsung dieksekusi, tanpa teks penjelasan, tanpa tanda kutip balik (```), dan tanpa karakter atau teks tambahan apapun di awal atau akhir. Pastikan semua kurung dan tanda baca lainnya tertutup dengan benar."""
             },
         ],
     )
     response_content = response.choices[0].message.content
-    return response_content[response_content.find('\n')+1:response_content.rfind('\n')]
-
+    return response_content.strip()
 
 def user_color_threads(api_key, ulos_selected_color_codes):
     """
@@ -381,7 +379,7 @@ def user_color_threads(api_key, ulos_selected_color_codes):
             {"role": "system", "content": "You are a Senior Programmer"},
             {"role": "user", "content": f"""
             Anda menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna dalam format HSV (Hue, Saturation, Value) yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
-            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relavan dan sejenis dengan warna yang dipilih pengguna {user_selected_hsv}.
+            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relavan atau serupa dan sejenis dengan warna yang dipilih pengguna {user_selected_hsv}.
             Output harus berupa dictionary JSON dengan struktur sebagai berikut:
             - Key: kode warna asli atau kode warna yang relevan
             - Value: list berisi warna dipilih atau relevan
