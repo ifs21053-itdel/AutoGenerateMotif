@@ -221,34 +221,6 @@ $(document).ready(function () {
   function displayAnalysisResult(data) {
     if (!analysisPreview.length) return;
 
-    const harmonyScore = Math.round((data.harmony_score || 0) * 100);
-    let scoreClass = "low";
-    if (harmonyScore > 80) scoreClass = "high";
-    else if (harmonyScore > 60) scoreClass = "medium";
-
-    const analysisHTML = `
-      <div class="analysis-result fade-in">
-        <div class="scheme-type-badge">${data.scheme_type || 'Unknown'}</div>
-        <div class="scheme-description-text">${data.description || 'Tidak ada deskripsi'}</div>
-        <div class="harmony-display">
-          <div class="harmony-circle ${scoreClass}">
-            <span class="score-value">${harmonyScore}%</span>
-          </div>
-          <div class="harmony-info">
-            <div class="harmony-label">Skor Harmoni</div>
-            <div class="harmony-level">${data.recommendations?.harmony_level || 'Medium'}</div>
-          </div>
-        </div>
-        ${data.recommendations ? `
-          <div style="margin-top: 15px; text-align: left; background: rgba(255,255,255,0.1); padding: 10px; border-radius: 8px;">
-            <strong>💡 Rekomendasi:</strong><br>
-            <small><strong>Cocok untuk:</strong> ${data.recommendations.best_for || '-'}</small><br>
-            <small><strong>Aplikasi Ulos:</strong> ${data.recommendations.ulos_application || '-'}</small>
-          </div>
-        ` : ''}
-      </div>
-    `;
-
     analysisPreview.html(analysisHTML);
   }
 
@@ -301,28 +273,12 @@ $(document).ready(function () {
     if (!finalColorAnalysis.length) return;
 
     const analysis = data.color_scheme_analysis || {};
-    const recommendations = data.usage_recommendations || {};
     const scores = data.optimization_scores || {};
 
     // Update scheme type
     $("#finalSchemeType").text(analysis.scheme_type || 'Unknown');
     $("#finalSchemeDescription").text(analysis.description || 'Tidak ada deskripsi');
-
-    // Update harmony score
-    const harmonyScore = Math.round((analysis.color_harmony_score || 0) * 100);
-    const scoreCircle = $("#finalHarmonyScore");
-    scoreCircle.find(".score-value").text(harmonyScore + "%");
-    
-    // Update score circle class
-    scoreCircle.removeClass("high medium low");
-    if (harmonyScore > 80) scoreCircle.addClass("high");
-    else if (harmonyScore > 60) scoreCircle.addClass("medium");
-    else scoreCircle.addClass("low");
-
-    // Update recommendations
-    $("#recBestFor").text(recommendations.best_for || '-');
-    $("#recUlosApp").text(recommendations.ulos_application || '-');
-    $("#recHarmonyLevel").text(recommendations.harmony_level || '-');
+  
 
     // Show final analysis
     finalColorAnalysis.show().addClass("slide-up");
@@ -668,14 +624,23 @@ $(document).ready(function () {
     actualUsedColorsPalette.empty();
 
     // Validasi input di frontend
-    if (
-      !$("#jenisUlos").val() ||
-      !selectedMotifInput.val() ||
-      selectedColorCodes.length < 2
-    ) {
-      errorMessage.text("Harap pilih Jenis Ulos, Motif, dan minimal 2 warna.");
+    const jenisUlos = $("#jenisUlos").val();
+    const colorCount = selectedColorCodes.length;
+    
+    if (!jenisUlos && colorCount < 2) {
+      errorMessage.text("Harap pilih Jenis Ulos dan minimal 2 warna benang.");
       return;
     }
+    
+    if (!jenisUlos) {
+      errorMessage.text("Harap pilih Jenis Ulos.");
+      return;
+    }
+    
+    if (colorCount < 2) {
+      errorMessage.text("Harap pilih minimal 2 warna benang.");
+      return;
+}
 
     // Tampilkan UI loading
     loadingSpinner.show();

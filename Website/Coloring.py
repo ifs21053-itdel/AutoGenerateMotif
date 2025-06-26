@@ -281,46 +281,6 @@ class UlosColorSchemeAnalyzer:
         
         hues = [c.hue for c in colors]
         return max(hues) - min(hues)
-    
-    def get_usage_recommendations(self, analysis: Dict) -> Dict:
-        """Updated recommendations without best_for and ulos_application"""
-        scheme_type = analysis["scheme_type"]
-    
-        
-        recommendations = {
-            ColorSchemeType.MONOCHROMATIC: {
-                "primary_ratio": "60%",
-                "secondary_ratio": "30%",
-                "accent_ratio": "10%"
-            },
-            ColorSchemeType.ANALOGOUS: {
-                "primary_ratio": "50%",
-                "secondary_ratio": "30%",
-                "accent_ratio": "20%"
-            },
-            ColorSchemeType.COMPLEMENTARY: {
-                "primary_ratio": "70%",
-                "secondary_ratio": "30%",
-                "accent_ratio": "Use sparingly",
-            },
-            ColorSchemeType.TRIADIC: {
-                "primary_ratio": "50%",
-                "secondary_ratio": "30%",
-                "accent_ratio": "20%",
-            },
-            ColorSchemeType.TETRADIC: {
-                "primary_ratio": "40%",
-                "secondary_ratio": "30%",
-                "accent_ratio": "30% (distributed)",
-            },
-            ColorSchemeType.ACHROMATIC: {
-                "primary_ratio": "60%",
-                "secondary_ratio": "40%",
-                "accent_ratio": "Consider adding color",
-            }
-        }
-        
-        return recommendations.get(scheme_type, {})
 
 # Global color scheme analyzer instance
 ulos_color_analyzer = UlosColorSchemeAnalyzer()
@@ -780,7 +740,6 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
         
         # ANALYZE COLOR SCHEME
         color_scheme_analysis = ulos_color_analyzer.analyze_color_scheme(unique_used_color_codes)
-        usage_recommendations = ulos_color_analyzer.get_usage_recommendations(color_scheme_analysis)
         
         print(f"DEBUG: Color Scheme Analysis: {color_scheme_analysis['scheme_type'].value}")
 
@@ -804,13 +763,6 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
                 'achromatic_count': color_scheme_analysis.get('achromatic_count', 0),
                 'chromatic_count': color_scheme_analysis.get('chromatic_count', 0)
             },
-            'usage_recommendations': {
-                'best_for': usage_recommendations.get('best_for', ''),
-                'ulos_application': usage_recommendations.get('ulos_application', ''),
-                'primary_ratio': usage_recommendations.get('primary_ratio', ''),
-                'secondary_ratio': usage_recommendations.get('secondary_ratio', ''),
-                'accent_ratio': usage_recommendations.get('accent_ratio', '')
-            },
             # Optimization scores
             'optimization_scores': {
                 'michaelson_contrast': float(-best_scores[0]),
@@ -821,7 +773,7 @@ def main_coloring_process(ulos_type_input, ulos_selected_color_codes_input, base
             }
         }
         cache.set(task_id, final_result, timeout=3600)
-        return relative_output_path, unique_used_color_codes, color_scheme_analysis, usage_recommendations
+        return relative_output_path, unique_used_color_codes, color_scheme_analysis
 
     except Exception as e:
         print(f"ERROR in main_coloring_process: {str(e)}")
@@ -845,13 +797,11 @@ def get_color_scheme_preview(color_codes_list: List[str]) -> Dict:
         
         # Analyze the color scheme
         analysis = ulos_color_analyzer.analyze_color_scheme(color_codes_list)
-        recommendations = ulos_color_analyzer.get_usage_recommendations(analysis)
         
         return {
             'success': True,
             'scheme_type': analysis['scheme_type'].value,
             'description': analysis['description'],
-            'recommendations': recommendations,
             'color_details': {
                 code: {
                     'hue': ulos_color_analyzer.colors[code].hue,
