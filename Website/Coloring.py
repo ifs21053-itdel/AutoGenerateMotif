@@ -1,4 +1,3 @@
-import subprocess
 import sys
 import os
 import json
@@ -19,10 +18,9 @@ from django.conf import settings
 from django.core.cache import cache
 import importlib.util
 from pymoo.core.callback import Callback
-from typing import List, Tuple, Dict
+from typing import List, Dict
 from dataclasses import dataclass
 from enum import Enum
-import math
 
 # Import Django models
 from Website.models import UlosColorThread, UlosCharacteristic
@@ -312,7 +310,6 @@ def create_custom_objective_function(ulos_type_name, api_key, ulos_selected_colo
             - Pola: {pattern}
             - Warna accent: {accent_color}
             - Kontras warna: {contrast}
-
             Daftar kombinasi Hue, Saturation, Value preferensi pengguna adalah {list_colors_hsv}.
             Fungsi ini menerima masukan berupa matriks citra dalam HSV color space (dengan Hue 0-179, Saturation 0-255, Value 0-255, dan dtype np.uint8).
             Dari citra tersebut, ekstrak semua kombinasi unik Hue, Saturation, Value.
@@ -338,16 +335,15 @@ def user_color_threads(api_key, ulos_selected_color_codes):
         messages=[
             {"role": "system", "content": "You are a Senior Programmer"},
             {"role": "user", "content": f"""
-            Anda menerima daftar warna referensi dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna dalam format HSV (Hue, Saturation, Value) yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
-            Tugas Anda adalah memberikan warna dari {DB_ULOS_THREAD_COLORS} yang paling relevan dan paling mirip secara visual dengan warna yang dipilih pengguna {user_selected_hsv}.
+            Anda menerima daftar warna dalam format HSV (Hue, Saturation, Value) yaitu: {DB_ULOS_THREAD_COLORS}, dan warna dalam format HSV (Hue, Saturation, Value) yang dipilih oleh pengguna yaitu :{user_selected_hsv}.
+            Berikan warna yang sesuai dengan referensi pengguna dari daftar warna yang diberikan.
             Output harus berupa dictionary JSON dengan struktur sebagai berikut:
-            - Key: kode warna yang dipilih pengguna atau kode warna yang paling relevan
-            - Value: list berisi warna dipilih atau relevan
-            - Kembalikan kode warna yang dipilih pengguna dan yang relevan
+            - Key: berisi kode warna yang sesuai dengan referensi pengguna
+            - Value: berisi warna HSV yang sesuai dengan referensi pengguna
             Pastikan:
             1. Format kode dan value warna dikembalikan dalam daftar seperti pada {DB_ULOS_THREAD_COLORS}
-            2. Satu kode hanya mengandung satu value, untuk warna similiar menggunaakan kode warna asli sebagai key.
-            3. Output harus valid JSON
+            2. Satu kode hanya mengandung satu value dan key
+            3. Output harus valid menggunakan format JSON
             berikan daftar warna saja, jangan tambahkan keterangan.
             """
             },
@@ -355,7 +351,6 @@ def user_color_threads(api_key, ulos_selected_color_codes):
     )
     response_content = response.choices[0].message.content
     return json.loads(response_content[response_content.find('{') : response_content.rfind('}') + 1])
-
 
 ## Utils
 

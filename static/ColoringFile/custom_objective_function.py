@@ -1,31 +1,37 @@
 import numpy as np
 
 def calculate_user_color_preferences(image_hsv):
-    # Predefined user preferences in HSV (H: 0-360, S: 0-100, V: 0-100)
-    user_preferences = np.array([[69, 73, 79], [348, 74, 73]], dtype=np.int32)
+    # Predefined user preferences in HSV (H:0-360, S:0-100, V:0-100)
+    user_preferences = np.array([
+        [18, 77, 57],
+        [1, 88, 80],
+        [30, 20, 100],
+        [205, 60, 100],
+        [0, 0, 100]
+    ], dtype=np.int32)
+    
+    # Extract unique HSV combinations from image
+    hsv_combinations = np.unique(image_hsv.reshape(-1, 3), axis=0)
     
     # Convert image HSV to match user preference format
-    hue_img = image_hsv[:, :, 0].astype(np.int32) * 2  # Convert H from 0-179 to 0-358
-    sat_img = (image_hsv[:, :, 1].astype(np.float32) / 255 * 100).astype(np.int32)  # Convert S from 0-255 to 0-100
-    val_img = (image_hsv[:, :, 2].astype(np.float32) / 255 * 100).astype(np.int32)  # Convert V from 0-255 to 0-100
+    # Hue: 0-179 -> 0-360 (scale by 2)
+    # Saturation: 0-255 -> 0-100 (scale by 100/255)
+    # Value: 0-255 -> 0-100 (scale by 100/255)
+    h_img = (hsv_combinations[:, 0].astype(np.int32) * 2) % 360
+    s_img = (hsv_combinations[:, 1] * 100 / 255).astype(np.int32)
+    v_img = (hsv_combinations[:, 2] * 100 / 255).astype(np.int32)
     
-    # Get all unique HSV combinations in the image
-    hsv_combinations = np.unique(np.column_stack((hue_img.flatten(), sat_img.flatten(), val_img.flatten())), axis=0)
+    image_hsv_converted = np.column_stack((h_img, s_img, v_img))
     
-    # Calculate fitness based on how close the image colors match user preferences
-    fitness = 0.0
+    # Calculate fitness based on matching colors
+    match_count = 0
     for pref in user_preferences:
-        min_dist = float('inf')
-        for img_color in hsv_combinations:
-            # Calculate Euclidean distance in HSV space
-            h_diff = min(abs(pref[0] - img_color[0]), 360 - abs(pref[0] - img_color[0])) / 180.0
-            s_diff = abs(pref[1] - img_color[1]) / 100.0
-            v_diff = abs(pref[2] - img_color[2]) / 100.0
-            dist = np.sqrt(h_diff**2 + s_diff**2 + v_diff**2)
-            if dist < min_dist:
-                min_dist = dist
-        fitness += (1.0 - min_dist)
+        for img_color in image_hsv_converted:
+            if np.array_equal(pref, img_color):
+                match_count += 1
+                break
     
-    # Normalize fitness to range [0, 1]
-    fitness /= len(user_preferences)
+    # Calculate fitness score (normalized to 0-1)
+    fitness = match_count / len(user_preferences)
+    
     return fitness
